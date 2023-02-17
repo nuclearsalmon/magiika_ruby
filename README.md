@@ -5,13 +5,9 @@ Ruby, *magic and ⊹SPARKLES₊+*!
 
 ## Motivation
 
-To create a custom language that is pleasant to use and has
+To create a custom language that is pleasant to use, and has
 built-in security features for running untrusted code 
 safely.
-
----
-
-<br>
 
 ## 📦 Dependencies
 
