@@ -18,3 +18,6 @@
 
 # custom file types
 *.iika
+
+# ignore documentation for now
+/doc
