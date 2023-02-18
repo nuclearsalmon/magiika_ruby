@@ -32,9 +32,9 @@ safely.
 
 ### Run tests
 
-- You can run all the availible tests by running the `test_main.rb` file.
+- You can run all the availible tests by running the `test_all.rb` file.
 - You can run also any of the `test_*.rb` files on their own.
 
 ```bash
-./test/test_main.rb
+./test/test_all.rb
 ```
