@@ -229,6 +229,7 @@ def get_obj_from_type(type)
 	return BUILT_IN_TYPES[type]
 end
 
+
 def get_expanded_type(node)
 	return node.type == "magic" ? node.type + "(#{node.magic_type})" : node.type
 end

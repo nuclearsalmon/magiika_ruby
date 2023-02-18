@@ -1,11 +1,12 @@
 #!/usr/bin/env ruby
 
+require_relative './rdparse.rb'
+require_relative './types.rb'
+require_relative './program.rb'
+require_relative './scope.rb'
+require_relative './variables.rb'
+
 require 'logger'
-require './src/rdparse.rb'
-require './src/types.rb'
-require './src/program.rb'
-require './src/scope.rb'
-require './src/variables.rb'
 
 
 class MagiikaParser
@@ -21,7 +22,7 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       # whitespace
-      token(/(\n|;)+/)              {|_| :eol}         # eol marker
+      token(/(\n|;)+/)              {|_| :eol}          # eol marker
 
       # comments
       token(/#.*$/)
@@ -164,7 +165,8 @@ class MagiikaParser
           |_,name,_,value| 
           DeclareVariable.new("magic", name, value, scope_handler)
         }
-        match(":", :name)           {|_,name|
+        match(":", :name) {
+          |_,name| 
           DeclareVariable.new("magic", name, scope_handler)
         }
       end
@@ -182,7 +184,8 @@ class MagiikaParser
       end
 
       rule :variable do
-        match(:name)                {|name|
+        match(:name) {
+          |name|
           RetrieveVariable.new(name, scope_handler)
         }
       end
@@ -190,32 +193,40 @@ class MagiikaParser
 
       # ✨ EXPRESSIONS
       # ------------------------------------------------------------------------
-
+      
       rule :expression do
         match(:expression, "+", :value) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match(:value, "+", :value) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match(:value, "+", :expression) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match("+", :value) {
-          |op,r| ExpressionNode.new(EmptyNode.get_default_instance, op, r)
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
         }
 
         match(:expression, "-", :value) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match(:value, "-", :value) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match(:value, "-", :expression) {
-          |l,op,r| ExpressionNode.new(l, op, r)
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
         }
         match("-", :value) {
-          |op,r| ExpressionNode.new(EmptyNode.get_default_instance, op, r)
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
         }
 
         match(:value)
@@ -231,14 +242,16 @@ class MagiikaParser
 
       rule :and_condition do
         match(:and_condition, /and|&&/, :or_condition) {
-          |l,op,r| ConditionNode.new(l, op, r)
+          |l,op,r| 
+          ConditionNode.new(l, op, r)
         }
         match(:or_condition)
       end
 
       rule :or_condition do
         match(:or_condition, /or|\|\|/, :condition_fallback) {
-          |l,op,r| ConditionNode.new(l, op, r)
+          |l,op,r| 
+          ConditionNode.new(l, op, r)
         }
         match(:condition_fallback)
       end

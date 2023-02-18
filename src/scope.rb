@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+
 class ScopeHandler
   def initialize
     @scopes = [Hash.new]
