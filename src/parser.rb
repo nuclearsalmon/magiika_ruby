@@ -38,7 +38,7 @@ class MagiikaParser
       # multi-character operators
       token(/(:=|\|\||&&)/)         {|t| t}             # := || &&
 
-      # operators
+      # single-character operators
       token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}         # = + - * / % & ! < >
 
       # symbols
@@ -116,6 +116,13 @@ class MagiikaParser
         match(/([A-Za-z][A-Za-z_\-0-9]*)/)
       end
 
+      rule :variable do
+        match(:name) {
+          |name|
+          RetrieveVariable.new(name, scope_handler)
+        }
+      end
+
       rule :built_in_type do
         match("magic")
         match("bool")
@@ -130,38 +137,20 @@ class MagiikaParser
         # special declaration syntax
         #FIXME: This should later be inside a statement, not freestanding.
         #       This is temporary just for testing purposes.
-        match(:name, ":=", :value) {
-          |name,_,value| 
-          RedeclareVariable.new(name, value, scope_handler)
-        }
         match(:name, ":=", :expression) {
           |name,_,value| 
           RedeclareVariable.new(name, value, scope_handler)
         }
 
-        # static typing
-        match(:built_in_type, ":", :name, "=", :expression) {
-          |type,_,name,_,value| 
-          DeclareVariable.new(type, name, value, scope_handler)
-        }
-        match(:built_in_type, ":", :name, "=", :value) {
-          |type,_,name,_,value| 
-          DeclareVariable.new(type, name, value, scope_handler)
-        }
-        match(:built_in_type, ":", :name) {
-          |type,_,name|
-          DeclareVariable.new(type, name, scope_handler)
-        }
+        match(:magic_declare_stmt)
+        match(:static_declare_stmt)
+      end
 
+      rule :magic_declare_stmt do
         # eol handling
-        match(":", :eol)            {nil}
+        match(":", :eol)           {nil}
 
-        # dynamic typing (`magic' type 🌟)
-        match(":", :name, "=", :expression) {
-          |_,name,_,value| 
-          DeclareVariable.new("magic", name, value, scope_handler)
-        }
-        match(":", :name, "=", :value) {
+        match(":", :name, "=", :condition) {
           |_,name,_,value| 
           DeclareVariable.new("magic", name, value, scope_handler)
         }
@@ -171,68 +160,29 @@ class MagiikaParser
         }
       end
 
+      rule :static_declare_stmt do
+        match("bool", ":", :name, "=", :condition) {
+          |type,_,name,_,value| 
+          DeclareVariable.new(type, name, value, scope_handler)
+        }
+        match(:built_in_type, ":", :name, "=", :expression) {
+          |type,_,name,_,value| 
+          DeclareVariable.new(type, name, value, scope_handler)
+        }
+        match(:built_in_type, ":", :name) {
+          |type,_,name|
+          DeclareVariable.new(type, name, scope_handler)
+        }
+      end
+
       rule :assign_stmt do
         match(:name, "=", :expression) {
           |name,_,value| 
           AssignVariable.new(name, value, scope_handler)
         }
-
-        match(:name, "=", :value) {
-          |name,_,value| 
-          AssignVariable.new(name, value, scope_handler)
-        }
-      end
-
-      rule :variable do
-        match(:name) {
-          |name|
-          RetrieveVariable.new(name, scope_handler)
-        }
       end
 
 
-      # ✨ EXPRESSIONS
-      # ------------------------------------------------------------------------
-      
-      rule :expression do
-        match(:expression, "+", :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:value, "+", :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:value, "+", :expression) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match("+", :value) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
-        }
-
-        match(:expression, "-", :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:value, "-", :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:value, "-", :expression) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match("-", :value) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
-        }
-
-        match(:value)
-      end
-
-      
       # ✨ CONDITIONS
       # ------------------------------------------------------------------------
 
@@ -241,7 +191,7 @@ class MagiikaParser
       end
 
       rule :and_condition do
-        match(:and_condition, /and|&&/, :or_condition) {
+        match(:and_condition, /(and|&&)/, :or_condition) {
           |l,op,r| 
           ConditionNode.new(l, op, r)
         }
@@ -249,7 +199,7 @@ class MagiikaParser
       end
 
       rule :or_condition do
-        match(:or_condition, /or|\|\|/, :condition_fallback) {
+        match(:or_condition, /(or|\|\|)/, :condition_fallback) {
           |l,op,r| 
           ConditionNode.new(l, op, r)
         }
@@ -258,6 +208,31 @@ class MagiikaParser
 
       rule :condition_fallback do
         match(:expression)
+      end
+
+
+      # ✨ EXPRESSIONS
+      # ------------------------------------------------------------------------
+      
+      rule :expression do
+        match(:expression, /(\+|-|\*|\/)/, :value) {
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
+        }
+        match(:value, /(\+|-|\*|\/)/, :value) {
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
+        }
+        match(:value, /(\+|-|\*|\/)/, :expression) {
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
+        }
+        match(/(\+|-)/, :value) {
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
+        }
+
+        match(:value)
       end
       
     end

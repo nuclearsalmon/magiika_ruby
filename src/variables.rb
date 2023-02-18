@@ -17,7 +17,7 @@ class DeclareVariable < BaseNode
 
 		if @type != "magic" and 
 				(@object != nil and @type != @object.unwrap.type) then
-			raise "type attrib `#{@type}' does not match object type `#{@object.type}'"
+			raise "requested container type `#{@type}' does not match data type `#{@object.type}'"
 		end
 	end
 
