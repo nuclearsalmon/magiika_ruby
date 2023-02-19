@@ -7,7 +7,7 @@
 
 class BaseNode
 	def eval
-		raise MagiikaError.new("not implemented.")
+		raise MagiikaNotImplementedError.new
 	end
 end
 
@@ -62,7 +62,7 @@ class DataNode < EmptyNode
 	end
 
 	def self.type
-		raise MagiikaError.new("not implemented.")
+		raise MagiikaNotImplementedError.new
 	end
 
 	def output
@@ -86,7 +86,7 @@ class DataNode < EmptyNode
 	end
 
 	def cast(from, value)
-		raise MagiikaNotImplementedError.new("casting from `#{from}=#{value}'.")
+		raise MagiikaNotImplementedError.new
 	end
 end
 

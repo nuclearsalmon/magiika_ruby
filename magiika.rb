@@ -109,7 +109,7 @@ class Magiika
       end
     end
   rescue Interrupt
-    puts "\n\n🌃 " + ANSI_RELAXED_STYLE + "leaving interactive mode" +
+    puts "\n🌃 " + ANSI_RELAXED_STYLE + "leaving interactive mode" +
       ANSI_RESET + "\n\n"
   end
 end
