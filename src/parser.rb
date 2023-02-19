@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
+require_relative './error.rb'
 require_relative './rdparse.rb'
-require_relative './types.rb'
+require_relative './type.rb'
 require_relative './program.rb'
 require_relative './scope.rb'
-require_relative './variables.rb'
+require_relative './variable.rb'
 
 require 'logger'
 

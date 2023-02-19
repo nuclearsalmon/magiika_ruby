@@ -88,7 +88,7 @@ class Magiika
       else
         begin
           result = @parser.parse(input)
-        rescue Exception => error
+        rescue MagiikaError => error
           raise error if !@error_rescueing
           
           err_msg = error.to_s.strip + "\n"

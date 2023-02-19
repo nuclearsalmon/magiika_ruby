@@ -12,18 +12,20 @@ class DeclareVariable < BaseNode
 		@scope_handler = scope_handler
 
 		if BUILT_IN_TYPES.keys.include?(@name) then
-			raise "using `#{@name}' as a variable name is not allowed."
+			raise MagiikaUnsupportedOperationError.new(
+				"using `#{@name}' as a variable name.")
 		end
 
 		if @type != "magic" and 
 				(@object != nil and @type != @object.unwrap.type) then
-			raise "requested container type `#{@type}' does not match data type `#{@object.type}'"
+			raise MagiikaError.new("requested container type `#{@type}' " + 
+				"does not match data type `#{@object.type}'")
 		end
 	end
 
 	def default_object
 		def_obj = get_obj_from_type(@type)
-		raise "no default object exists for type `#{@type}'." if def_obj == nil
+		raise MagiikaError.new("no default object exists for type `#{@type}'.") if def_obj == nil
 		return def_obj
 	end
 
@@ -57,7 +59,7 @@ class AssignVariable < BaseNode
 
 	def eval
 		var = @scope_handler.get_var(@name)
-		raise "undefined variable `#{@name}'." if var == nil
+		raise MagiikaError.new("undefined variable `#{@name}'.") if var == nil
 
 		# handle magic
 		obj = @object.unwrap
@@ -68,9 +70,7 @@ class AssignVariable < BaseNode
 			(var.type == "magic" && (var.magic_type == obj.type)) then
 			@scope_handler.set_var(@name, obj)
 		else
-			exp_obj_type = get_expanded_type(obj)
-			exp_var_type = get_expanded_type(var)
-			raise "mismatched types: `#{exp_var_type}' from `#{exp_obj_type}'."
+			raise MagiikaMismatchedTypeCastError.new(obj, var)
 		end
 		return obj
 	end
@@ -110,14 +110,16 @@ class RedeclareVariable < WrapNode
 		@scope_handler = scope_handler
 
 		if BUILT_IN_TYPES.keys.include?(@name) then
-			raise "using `#{@name}' as a variable name is not allowed."
+			raise MagiikaUnsupportedOperationError.new(
+				"using `#{@name}' as a variable name.")
 		end
 	end
 
 	def unwrap
 		# get default object
 		if @object == nil then
-			raise "Redeclaration to nil is not allowed."
+			raise MagiikaUnsupportedOperationError.new(
+				"redeclaration to nil.")
 		else
 			# wrap in magic
 			obj = MagicNode.new(@object)

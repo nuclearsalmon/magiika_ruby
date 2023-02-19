@@ -40,8 +40,8 @@ class ConditionNode < WrapNode
 		when "or", "||"
 			return BoolNode.new(l.bool_value || r.bool_value)
 		else
-			raise "unsupported operation: " + 
-				"`#{get_expanded_type(l)} #{@op} #{get_expanded_type(r)}'."
+			raise MagiikaUnsupportedOperationError.new(
+				"`#{get_expanded_type(l)} #{@op} #{get_expanded_type(r)}'.")
 		end
 	end
 

@@ -138,7 +138,7 @@ class Parser
     until string.empty?
       # Unless any of the valid tokens of our language are the prefix of
       # 'string', we fail with an exception
-      raise ParseError, "unable to lex '#{string}" unless @lex_tokens.any? do |tok|
+      raise MagiikaParseError.new("unable to lex `#{string}'.") unless @lex_tokens.any? do |tok|
         match = tok.pattern.match(string)
         # The regular expression of a token has matched the beginning of 'string'
         if match
@@ -171,7 +171,8 @@ class Parser
     result = @start.parse
     # If there are unparsed extra tokens, signal error
     if @pos != @tokens.size
-      raise ParseError, "parse error. expected: '#{@expected.join(', ')}', found '#{@tokens[@max_pos]}'"
+      raise MagiikaParseError.new(
+        "expected `#{@expected.join(', ')}', found `#{@tokens[@max_pos]}'.")
     end
     return result
   end

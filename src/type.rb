@@ -7,7 +7,7 @@
 
 class BaseNode
 	def eval
-		raise "not implemented."
+		raise MagiikaError.new("not implemented.")
 	end
 end
 
@@ -62,7 +62,7 @@ class DataNode < EmptyNode
 	end
 
 	def self.type
-		raise "type not implemented for `#{self}'"
+		raise MagiikaError.new("not implemented.")
 	end
 
 	def output
@@ -78,15 +78,15 @@ class DataNode < EmptyNode
 	end
 
 	def self.get_default_value
-		raise "get_default_value not implemented for `#{self}'"
+		raise MagiikaNotImplementedError.new
 	end
 
 	def self.get_default_instance
-		raise "get_default_instance not implemented for `#{self}'"
+		raise MagiikaNotImplementedError.new
 	end
 
 	def cast(from, value)
-		raise "casting from `#{from}=#{value}' not implemented for `#{self}'"
+		raise MagiikaNotImplementedError.new("casting from `#{from}=#{value}'.")
 	end
 end
 
@@ -94,7 +94,7 @@ end
 class IntNode < DataNode
 	def initialize(value)
 		if value.class != Integer then
-			raise "invalid type, `#{value}' is not an int"
+			raise MagiikaInvalidTypeError.new(value, self.type)
 		end
 		super(value)
 	end
@@ -120,7 +120,7 @@ end
 class FltNode < DataNode
 	def initialize(value)
 		if value.class != Integer && value.class != Float then
-			raise "invalid type, `#{value}' is not a flt"
+			raise MagiikaInvalidTypeError.new(value, self.type)
 		end
 		super(value)
 	end
@@ -146,7 +146,7 @@ end
 class BoolNode < DataNode
 	def initialize(value)
 		if value.class != TrueClass and value.class != FalseClass then
-			raise "invalid type, `#{value}' is not a bool"
+			raise MagiikaInvalidTypeError.new(value, self.type)
 		end
 		super(value)
 	end
@@ -177,7 +177,7 @@ class MagicNode < DataNode
 		if value != nil then
 			value = value.unwrap
 			if !(value.class == EmptyNode || value.class < DataNode) then
-				raise "invalid type, `#{value}' is not empty or a built in type."
+				raise MagiikaError.new("invalid type, `#{value}' is not empty or a built in type.")
 			end
 		end
 		super(value)

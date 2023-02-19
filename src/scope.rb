@@ -25,14 +25,14 @@ class ScopeHandler
       i -= 1
     end
 
-    raise "undefined object `#{name}'."
+    raise MagiikaUndefinedVariableError.new(name)
   end
 
   def add_var(name, obj)
     if @scopes[-1][name] == nil
       @scopes[-1][name] = obj
     else
-      raise "`#{name}' is already defined."
+      raise MagiikaDefinedVariableError.new(name)
     end
   end
 
