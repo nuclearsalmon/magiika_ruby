@@ -85,7 +85,7 @@ class ExpressionNode < BaseNode
 
 			if l.type != r.type then
 				raise	MagiikaUnsupportedOperationError.new(
-					"mismatched types: `#{l.type}' `#{@op}' `#{r.type}'")
+					"mismatched types: `#{l.type}' #{@op} `#{r.type}'")
 			end
 
 			return l.public_send(@op, r)

@@ -88,6 +88,7 @@ class MagiikaParser
         match(:literal)
         match("empty")              {EmptyNode.new}
         match(:variable)
+        match("(", :condition, ")") {|_,cond,_| cond}
       end
       
       rule :literal do
@@ -114,7 +115,7 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :name do
-        match(/([A-Za-z][A-Za-z_\-0-9]*)/)
+        match(/([A-Za-z][A-Za-z_0-9]*)/)
       end
 
       rule :variable do
@@ -188,19 +189,20 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :condition do
-        match(:and_condition)
-      end
-
-      rule :and_condition do
-        match(:and_condition, /(and|&&)/, :or_condition) {
-          |l,op,r| 
-          ConditionNode.new(l, op, r)
-        }
         match(:or_condition)
       end
 
       rule :or_condition do
-        match(:or_condition, /(or|\|\|)/, :condition_fallback) {
+        match(:or_condition, /(or|\|\|)/, :and_condition) {
+          |l,op,r| 
+          ConditionNode.new(l, op, r)
+        }
+        match(:and_condition)
+        
+      end
+
+      rule :and_condition do
+        match(:and_condition, /(and|&&)/, :condition_fallback) {
           |l,op,r| 
           ConditionNode.new(l, op, r)
         }

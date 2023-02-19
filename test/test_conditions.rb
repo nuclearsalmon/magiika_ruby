@@ -109,7 +109,7 @@ class TestMixedConditions < Test::Unit::TestCase
     assert_equal(true, r.value)
 
     r = parse_new("1 or 1 and false")
-    assert_equal(false, r.value)
+    assert_equal(true, r.value)
 
     r = parse_new("1 and 1 or false and true")
     assert_equal(true, r.value)

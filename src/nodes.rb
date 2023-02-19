@@ -5,8 +5,13 @@ require 'singleton'
 
 module ArithmeticOperators
 	def +(obj=nil)
-		return self if value == nil
-		return self.class.new(@value + value)
+		return self if obj == nil
+
+		if obj.class != self.class then
+			raise MagiikaMismatchedTypeError.new(obj, self)
+		end
+
+		return self.class.new(@value + obj.value)
 	end
 
 	def -(obj=nil)
@@ -17,6 +22,22 @@ module ArithmeticOperators
 		end
 
 		return self.class.new(@value - obj.value)
+	end
+
+	def *(obj)
+		if obj.class != self.class then
+			raise MagiikaMismatchedTypeError.new(obj, self)
+		end
+
+		return self.class.new(@value * obj.value)
+	end
+
+	def /(obj)
+		if obj.class != self.class then
+			raise MagiikaMismatchedTypeError.new(obj, self)
+		end
+
+		return self.class.new(@value / obj.value)
 	end
 end
 
