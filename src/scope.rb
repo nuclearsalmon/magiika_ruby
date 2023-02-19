@@ -32,7 +32,7 @@ class ScopeHandler
     if @scopes[-1][name] == nil
       @scopes[-1][name] = obj
     else
-      raise MagiikaDefinedVariableError.new(name)
+      raise MagiikaAlreadyDefinedError.new(name)
     end
   end
 

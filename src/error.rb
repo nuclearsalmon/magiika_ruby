@@ -32,7 +32,16 @@ class MagiikaUnsupportedOperationError < MagiikaError
 end
 
 
+# Attempting to get a TypeNode class for a non-existant type
 class MagiikaInvalidTypeError < MagiikaError
+  def initialize(type)
+    msg = "invalid type: `#{type}' is not a valid `#{TypeNode}'."
+    super(msg)
+  end
+end
+
+
+class MagiikaMismatchedTypeError < MagiikaError
   def initialize(value, type)
     msg = "invalid type: `#{value}' is not a `#{type}'."
     super(msg)
@@ -40,17 +49,17 @@ class MagiikaInvalidTypeError < MagiikaError
 end
 
 
-class MagiikaMismatchedTypeCastError < MagiikaError
+class MagiikaNoSuchCastError < MagiikaError
   def initialize(from, into)
     into_type = get_expanded_type(into)
     from_type = get_expanded_type(from)
-    msg = "mismatched types: `#{into_type}' from `#{from_type}'."
+    msg = "cannot cast from `#{from_type}' into `#{into_type}'."
     super(msg)
   end
 end
 
 
-class MagiikaDefinedVariableError < MagiikaError
+class MagiikaAlreadyDefinedError < MagiikaError
   def initialize(name)
     msg = "`#{name}' is already defined."
     super(msg)

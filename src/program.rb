@@ -27,7 +27,7 @@ class StmtsNode < BaseNode
 end
 
 
-class ConditionNode < WrapNode
+class ConditionNode < BaseNode
   def initialize(l, op, r)
     @l, @op, @r = l, op, r
   end
@@ -36,9 +36,9 @@ class ConditionNode < WrapNode
 		l, r = @l.unwrap, @r.unwrap
 		case @op
 		when "and", "&&"
-			return BoolNode.new(l.bool_value && r.bool_value)
+			return BoolNode.new(l.bool_eval? && r.bool_eval?)
 		when "or", "||"
-			return BoolNode.new(l.bool_value || r.bool_value)
+			return BoolNode.new(l.bool_eval? || r.bool_eval?)
 		else
 			raise MagiikaUnsupportedOperationError.new(
 				"`#{get_expanded_type(l)} #{@op} #{get_expanded_type(r)}'.")
@@ -53,13 +53,13 @@ class ConditionNode < WrapNode
 		return unwrap.eval
 	end
 
-	def bool_value
+	def bool_eval?
 		return eval
 	end
 end
 
 
-class ExpressionNode < WrapNode
+class ExpressionNode < BaseNode
 	def initialize(l, op, r)
 		@l, @op, @r = l, op, r
 	end
@@ -70,7 +70,7 @@ class ExpressionNode < WrapNode
 
 		if l.type == "empty" then
 			value = instance_eval("#{@op}#{r.eval}")
-			return get_obj_from_type(r.type).new(value)
+			return type_to_node_class(r.type).new(value)
 		end
 
 		case @op
@@ -79,16 +79,14 @@ class ExpressionNode < WrapNode
 				value = instance_eval("#{l.eval}#{@op}#{r.eval}")
 				
 				if l.type == "magic" then
-					value = get_obj_from_type(l.magic_type).new(value)
+					value = type_to_node_class(l.unwrap.type).new(value)
 				end
 
-				return get_obj_from_type(r.type).new(value)
+				return type_to_node_class(r.type).new(value)
 			end
 			raise	"unsupported operation, mismatched types: `#{exp_l_type}' #{@op} `#{exp_r_type}'"
 		else
-			exp_l_type = get_expanded_type(l)
-			exp_r_type = get_expanded_type(r)
-			raise	"unsupported operation: `#{exp_l_type}' #{@op} `#{exp_r_type}'"
+			raise	"unsupported operation: `#{l.expanded_type}' #{@op} `#{r.expanded_type}'"
 		end
 	end
 

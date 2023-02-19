@@ -38,6 +38,7 @@ class Magiika
     @parser.logger.level = Logger::WARN
     @pretty_error = true
     @error_rescueing = true
+    @raw_print = false
   end
 
   def logger
@@ -64,6 +65,9 @@ class Magiika
     when "a"
       @error_rescueing = !@error_rescueing
       _notify("error rescuing " + _cond_to_tg(@error_rescueing) + "\n")
+    when "r"
+      @raw_print = !@raw_print
+      _notify("raw object printing " + _cond_to_tg(@raw_print) + "\n")
     when "\n"
       _warn("unspecified command. try `##h'.")
     when "h"
@@ -103,6 +107,9 @@ class Magiika
         if result == nil then
           puts
         else
+          if !@raw_print and result.class.method_defined?("output") then
+            result = result.output
+          end
           puts "⭐ #{result}\n\n"
         end
 

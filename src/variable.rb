@@ -16,30 +16,19 @@ class DeclareVariable < BaseNode
 				"using `#{@name}' as a variable name.")
 		end
 
-		if @type != "magic" and 
+		if @type != MagicNode.type and 
 				(@object != nil and @type != @object.unwrap.type) then
 			raise MagiikaError.new("requested container type `#{@type}' " + 
 				"does not match data type `#{@object.type}'")
 		end
 	end
 
-	def default_object
-		def_obj = get_obj_from_type(@type)
-		raise MagiikaError.new("no default object exists for type `#{@type}'.") if def_obj == nil
-		return def_obj
-	end
-
 	def eval
 		# get default object
 		if @object == nil then
-			obj = default_object.get_default_instance
+			obj = type_to_node_class(@type).get_default
 		else
 			obj = @object
-		end
-
-		# wrap in magic if requested
-		if @type == "magic" then
-			obj = MagicNode.new(obj)
 		end
 		
 		@scope_handler.add_var(@name, obj)
@@ -63,46 +52,46 @@ class AssignVariable < BaseNode
 
 		# handle magic
 		obj = @object.unwrap
-		if var.type == "magic" then
+		if var.type == MagicNode.type then
 			obj = MagicNode.new(obj)
 			@scope_handler.set_var(@name, obj)
 		elsif var.type == obj.type || 
-			(var.type == "magic" && (var.magic_type == obj.type)) then
+			(var.type == MagicNode.type && (var.magic_type == obj.type)) then
 			@scope_handler.set_var(@name, obj)
 		else
-			raise MagiikaMismatchedTypeCastError.new(obj, var)
+			raise MagiikaNoSuchCastError.new(obj, var)
 		end
 		return obj
 	end
 end
 
 
-class RetrieveVariable < WrapNode
+class RetrieveVariable < BaseNode
 	attr_reader :name
 
 	def initialize(name, scope_handler)
 		@name, @scope_handler = name, scope_handler
 	end
 
-	def unwrap
-		return @scope_handler.get_var(@name)
+	def eval
+		return unwrap.eval
 	end
 
 	def output
-		return unwrap.output
+		return unwrap
 	end
 
-	def bool_value
-		return unwrap.bool_value
+	def bool_eval?
+		return unwrap.bool_eval?
 	end
 
-	def eval
-		return unwrap.eval
+	def unwrap
+		return @scope_handler.get_var(@name)
 	end
 end
 
 
-class RedeclareVariable < WrapNode
+class RedeclareVariable < BaseNode
 	attr_reader :name
 
 	def initialize(name, object, scope_handler)
@@ -134,8 +123,8 @@ class RedeclareVariable < WrapNode
 		return unwrap.output
 	end
 
-	def bool_value
-		return unwrap.bool_value
+	def bool_eval?
+		return unwrap.bool_eval?
 	end
 
 	def eval
