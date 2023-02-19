@@ -68,25 +68,27 @@ class ExpressionNode < BaseNode
 		l = @l.unwrap
 		r = @r.unwrap
 
-		if l.type == "empty" then
-			value = instance_eval("#{@op}#{r.eval}")
-			return type_to_node_class(r.type).new(value)
-		end
-
-		case @op
-		when "+", "-"
-			if l.type == r.type then
-				value = instance_eval("#{l.eval}#{@op}#{r.eval}")
-				
-				if l.type == "magic" then
-					value = type_to_node_class(l.unwrap.type).new(value)
-				end
-
-				return type_to_node_class(r.type).new(value)
+		if l == EmptyNode.get_default then
+			if !r.class.method_defined?(@op) then
+				raise	MagiikaUnsupportedOperationError.new("`#{@op}' `#{r.type}'.")
 			end
-			raise	"unsupported operation, mismatched types: `#{exp_l_type}' #{@op} `#{exp_r_type}'"
+
+			return r.public_send(@op)
+		elsif r == EmptyNode.get_default then
+			raise MagiikaUnsupportedOperationError.new(
+				"right-hand value must not be nil.")
 		else
-			raise	"unsupported operation: `#{l.expanded_type}' #{@op} `#{r.expanded_type}'"
+			if !l.class.method_defined?(@op) then
+				raise	MagiikaUnsupportedOperationError.new(
+					"`#{l.type}' `#{@op}' `#{r.type}'")
+			end
+
+			if l.type != r.type then
+				raise	MagiikaUnsupportedOperationError.new(
+					"mismatched types: `#{l.type}' `#{@op}' `#{r.type}'")
+			end
+
+			return l.public_send(@op, r)
 		end
 	end
 

@@ -1,5 +1,25 @@
 #!/usr/bin/env ruby
 
+require 'singleton'
+
+
+module ArithmeticOperators
+	def +(obj=nil)
+		return self if value == nil
+		return self.class.new(@value + value)
+	end
+
+	def -(obj=nil)
+		return self.class.new(-@value) if obj == nil
+
+		if obj.class != self.class then
+			raise MagiikaMismatchedTypeError.new(obj, self)
+		end
+
+		return self.class.new(@value - obj.value)
+	end
+end
+
 
 # Note: Defining a Node hierarchy like this is technically
 # unnecessary thanks to duck typing, but it makes reading
@@ -112,16 +132,10 @@ end
 
 
 class EmptyNode < TypeNode
-	@@default_instance = nil
-
-	def initialize
-		if @@default_instance == nil then
-			@@default_instance = self
-		end
-	end
+	include Singleton
 
 	def self.get_default
-		return @@default_instance
+		return self.instance
 	end
 
 	def eval
@@ -143,6 +157,8 @@ end
 
 
 class IntNode < ContainerTypeNode
+	include ArithmeticOperators
+
 	def initialize(value)
 		if value.class != Integer then
 			raise MagiikaMismatchedTypeError.new(value, self.type)
@@ -169,6 +185,8 @@ end
 
 
 class FltNode < ContainerTypeNode
+	include ArithmeticOperators
+
 	def initialize(value)
 		if value.class != Integer && value.class != Float then
 			raise MagiikaMismatchedTypeError.new(value, self.type)
@@ -231,7 +249,7 @@ class MagicNode < ContainerTypeNode
 	end
 
 	def self.get_default
-		return MagicNode.new(EmptyNode.new)
+		return MagicNode.new(EmptyNode.get_default)
 	end
 
 	def eval

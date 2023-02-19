@@ -28,7 +28,7 @@ class DeclareVariable < BaseNode
 		if @object == nil then
 			obj = type_to_node_class(@type).get_default
 		else
-			obj = @object
+			obj = @object.eval
 		end
 		
 		@scope_handler.add_var(@name, obj)

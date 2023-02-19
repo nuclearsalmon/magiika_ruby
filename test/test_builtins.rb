@@ -75,7 +75,8 @@ end
 class TestMagicNode < Test::Unit::TestCase
   def test_empty_decl
     r = parse_new(": v1; v1")
-    assert_equal(EmptyNode, r.class)
+    assert_equal(MagicNode, r.class)
+    assert_equal(EmptyNode, r.unwrap.class)
   end
 
   def test_int_decl

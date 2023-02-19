@@ -230,7 +230,7 @@ class MagiikaParser
         }
         match(/(\+|-)/, :value) {
           |op,r| 
-          ExpressionNode.new(EmptyNode.get_default_instance, op, r)
+          ExpressionNode.new(EmptyNode.get_default, op, r)
         }
 
         match(:value)
