@@ -216,9 +216,9 @@ class MagiikaParser
       # ------------------------------------------------------------------------
       
       rule :expression do
-        match(:expression, /(\+|-|\*|\/)/, :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
+        match(/(\+|-)/, :value) {
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default, op, r)
         }
         match(:value, /(\+|-|\*|\/)/, :value) {
           |l,op,r| 
@@ -228,11 +228,11 @@ class MagiikaParser
           |l,op,r| 
           ExpressionNode.new(l, op, r)
         }
-        match(/(\+|-)/, :value) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default, op, r)
+        match(:expression, /(\+|-|\*|\/)/, :value) {
+          |l,op,r|
+          ExpressionNode.new(l, op, r)
         }
-
+        
         match(:value)
       end
       
