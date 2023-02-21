@@ -51,8 +51,8 @@ end
 
 class MagiikaNoSuchCastError < MagiikaError
   def initialize(from, into)
-    into_type = get_expanded_type(into)
-    from_type = get_expanded_type(from)
+    into_type = into.expanded_type
+    from_type = from.expanded_type
     msg = "cannot cast from `#{from_type}' into `#{into_type}'."
     super(msg)
   end

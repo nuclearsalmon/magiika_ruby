@@ -16,7 +16,7 @@ class DeclareVariable < BaseNode
         "using `#{@name}' as a variable name.")
     end
 
-    if @type != MagicNode.type and 
+    if @type != MagicNode.type and
         (@object != nil and @type != @object.unwrap.type) then
       raise MagiikaError.new("requested container type `#{@type}' " + 
         "does not match data type `#{@object.type}'")
@@ -29,6 +29,11 @@ class DeclareVariable < BaseNode
       obj = type_to_node_class(@type).get_default
     else
       obj = @object.eval
+    end
+
+    # wrap in magic
+    if @type == MagicNode.type then
+      obj = MagicNode.new(obj)
     end
     
     @scope_handler.add_var(@name, obj)

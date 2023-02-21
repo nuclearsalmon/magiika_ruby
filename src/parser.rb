@@ -6,6 +6,7 @@ require_relative './nodes.rb'
 require_relative './program.rb'
 require_relative './scope.rb'
 require_relative './variable.rb'
+require_relative './lib/sys.rb'
 
 require 'logger'
 
@@ -36,13 +37,13 @@ class MagiikaParser
       token(/true/)                 {|t| :true}         # bool literal
       token(/false/)                {|t| :false}        # bool literal
       token(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|t| t}       # str literal
-      token(/'(.)'/)                {|t| t}             # chr literal
+      token(/'(.?)'/)               {|t| t}             # chr literal
 
       # multi-character operators
       token(/(:=|\|\||&&)/)         {|t| t}
 
       # single-character operators
-      token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}
+      token(/(=|\+|-|\*|\/|%|&|!|<|>|\$)/) {|t| t}
 
       # symbols
       token(/(\[|\]|\(|\)|\{|\}|,|\.|:)/) {|t| t}
@@ -76,6 +77,7 @@ class MagiikaParser
       end
 
       rule :nested_stmt do
+        match(:syslib_call)
         match(:declare_stmt)
         match(:assign_stmt)
         match(:condition)
@@ -128,7 +130,7 @@ class MagiikaParser
       end
 
       rule :chr do
-        match(/'(.)'/)              {|chr| ChrNode.new(chr[1..-2])}
+        match(/'(.?)'/)             {|chr| ChrNode.new(chr[1..-2])}
       end
 
       rule :str do
@@ -255,6 +257,14 @@ class MagiikaParser
           ExpressionNode.new(EmptyNode.get_default, op, r)
         }
         match(:value)
+      end
+
+
+      # ✨ LIBRARY CALLS
+      # ------------------------------------------------------------------------
+
+      rule :syslib_call do
+        match("\$", :condition) {|_,obj| Print.new(obj)}
       end
     end
   end
