@@ -31,19 +31,21 @@ class MagiikaParser
       token(/\/\*([^*]|\r?\n|(\*+([^*\/]|\r?\n)))*\*+\//)
       
       # literals
-      token(/\d+\.\d+/)             {|t| t.to_f}        # float literal
+      token(/\d+\.\d+/)             {|t| t.to_f}        # flt literal
       token(/\d+/)                  {|t| t.to_i}        # int literal
       token(/true/)                 {|t| :true}         # bool literal
       token(/false/)                {|t| :false}        # bool literal
+      token(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|t| t}       # str literal
+      token(/'(.)'/)                {|t| t}             # chr literal
 
       # multi-character operators
-      token(/(:=|\|\||&&)/)         {|t| t}             # := || &&
+      token(/(:=|\|\||&&)/)         {|t| t}
 
       # single-character operators
-      token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}         # = + - * / % & ! < >
+      token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}
 
       # symbols
-      token(/(\[|\]|\(|\)|\{|\}|,|\.|:)/) {|t| t}       # () [] {} , . :
+      token(/(\[|\]|\(|\)|\{|\}|,|\.|:)/) {|t| t}
       
       # names
       token(/[A-Za-z][A-Za-z_\-0-9]*/) {|t| t}
@@ -77,12 +79,15 @@ class MagiikaParser
         match(:declare_stmt)
         match(:assign_stmt)
         match(:condition)
-        match(:expression)
       end
 
 
       # ✨ TYPES
       # ------------------------------------------------------------------------
+
+      rule :name do
+        match(/([A-Za-z][A-Za-z_0-9]*)/)
+      end
       
       rule :value do
         match(:literal)
@@ -95,14 +100,26 @@ class MagiikaParser
         match(:flt)
         match(:int)
         match(:bool)
+        match(:chr)
+        match(:str)
       end
 
-      rule :int do
-        match(Integer)              {|int| IntNode.new(int)}
+      rule :built_in_type do
+        match("magic")
+        match("bool")
+        match("flt")
+        match("int")
+        match("chr")
+        match("str")
+        match("lst")
       end
 
       rule :flt do
         match(Float)                {|flt| FltNode.new(flt)}
+      end
+
+      rule :int do
+        match(Integer)              {|int| IntNode.new(int)}
       end
 
       rule :bool do
@@ -110,29 +127,25 @@ class MagiikaParser
         match(:false)               {|_| BoolNode.new(false)}
       end
 
+      rule :chr do
+        match(/'(.)'/)              {|chr| ChrNode.new(chr[1..-2])}
+      end
+
+      rule :str do
+        match(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {
+          |str| StrNode.new(str[1..-2])
+        }
+      end
+
 
       # ✨ VARIABLES
       # ------------------------------------------------------------------------
-
-      rule :name do
-        match(/([A-Za-z][A-Za-z_0-9]*)/)
-      end
 
       rule :variable do
         match(:name) {
           |name|
           RetrieveVariable.new(name, scope_handler)
         }
-      end
-
-      rule :built_in_type do
-        match("magic")
-        match("bool")
-        match("int")
-        match("flt")
-        match("str")
-        match("chr")
-        match("lst")
       end
 
       rule :declare_stmt do
@@ -163,10 +176,6 @@ class MagiikaParser
       end
 
       rule :static_declare_stmt do
-        match("bool", ":", :name, "=", :condition) {
-          |type,_,name,_,value| 
-          DeclareVariable.new(type, name, value, scope_handler)
-        }
         match(:built_in_type, ":", :name, "=", :expression) {
           |type,_,name,_,value| 
           DeclareVariable.new(type, name, value, scope_handler)
@@ -188,7 +197,7 @@ class MagiikaParser
       # ✨ CONDITIONS
       # ------------------------------------------------------------------------
 
-      rule :condition do
+      rule :condition do  # exists for the sake of readability
         match(:or_condition)
       end
 
@@ -202,14 +211,10 @@ class MagiikaParser
       end
 
       rule :and_condition do
-        match(:and_condition, /(and|&&)/, :condition_fallback) {
+        match(:and_condition, /(and|&&)/, :expression) {
           |l,op,r| 
           ConditionNode.new(l, op, r)
         }
-        match(:condition_fallback)
-      end
-
-      rule :condition_fallback do
         match(:expression)
       end
 
@@ -217,27 +222,40 @@ class MagiikaParser
       # ✨ EXPRESSIONS
       # ------------------------------------------------------------------------
       
+      # expression starting point. will propagate down
+      # to higher and higher precedence, as with all the other rules.
       rule :expression do
-        match(/(\+|-)/, :value) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default, op, r)
-        }
-        match(:value, /(\+|-|\*|\/)/, :value) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:value, /(\+|-|\*|\/)/, :expression) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
-        }
-        match(:expression, /(\+|-|\*|\/)/, :value) {
+        match(:expression, /(\+|-)/, :high_pred_expr) {
           |l,op,r|
           ExpressionNode.new(l, op, r)
         }
-        
+        match(:high_pred_expr)
+      end
+
+      # higher precedence expressions
+      rule :high_pred_expr do
+        match(:high_pred_expr, /(\*|\/)/, :unary_prefix_op) {
+          |l,op,r| 
+          ExpressionNode.new(l, op, r)
+        }
+        match(:unary_prefix_op)
+      end
+
+      rule :unary_prefix_op do
+        match(/(-|\+\+|--)/, :unary_postfix_op) {
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default, op, r)
+        }
+        match(:unary_postfix_op)
+      end
+
+      rule :unary_postfix_op do
+        match(:value, /(\+\+|--)/) {
+          |op,r| 
+          ExpressionNode.new(EmptyNode.get_default, op, r)
+        }
         match(:value)
       end
-      
     end
   end
 end
