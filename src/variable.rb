@@ -29,11 +29,10 @@ class DeclareVariable < BaseNode
       obj = type_to_node_class(@type).get_default
     else
       obj = @object.eval
-    end
-
-    # wrap in magic
-    if @type == MagicNode.type then
-      obj = MagicNode.new(obj)
+      
+      if @type == MagicNode.type then
+        obj = MagicNode.new(obj)  # wrap in magic
+      end
     end
     
     @scope_handler.add_var(@name, obj)
@@ -55,10 +54,9 @@ class AssignVariable < BaseNode
     var = @scope_handler.get_var(@name)
     raise MagiikaError.new("undefined variable `#{@name}'.") if var == nil
 
-    # handle magic
-    obj = @object.unwrap
+    obj = @object.eval #obj = @object.unwrap
     if var.type == MagicNode.type then
-      obj = MagicNode.new(obj)
+      obj = MagicNode.new(obj)  # wrap in magic
       @scope_handler.set_var(@name, obj)
     elsif var.type == obj.type || 
       (var.type == MagicNode.type && (var.magic_type == obj.type)) then
@@ -115,8 +113,7 @@ class RedeclareVariable < BaseNode
       raise MagiikaUnsupportedOperationError.new(
         "redeclaration to nil.")
     else
-      # wrap in magic
-      obj = MagicNode.new(@object)
+      obj = MagicNode.new(@object)  # wrap in magic
     end
 
     @scope_handler.relaxed_add_var(@name, obj)

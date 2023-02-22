@@ -6,7 +6,6 @@ require_relative './nodes.rb'
 require_relative './program.rb'
 require_relative './scope.rb'
 require_relative './variable.rb'
-require_relative './lib/sys.rb'
 
 require 'logger'
 
@@ -264,7 +263,7 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :syslib_call do
-        match("\$", :condition) {|_,obj| Print.new(obj)}
+        match("\$", :condition) {|_,obj| PrintNode.new(obj)}
       end
     end
   end

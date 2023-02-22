@@ -100,3 +100,17 @@ class ExpressionNode < BaseNode
     return unwrap.eval
   end
 end
+
+
+class PrintNode < ContainerTypeNode
+  def eval
+    value = @value.unwrap_all
+    if value.respond_to?(:value) then
+      puts value.value
+    elsif value.respond_to?(:output) then
+      puts value.output
+    else
+      puts
+    end
+  end
+end

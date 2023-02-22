@@ -102,6 +102,20 @@ class TypeNode < BaseNode
   def cast(from)
     raise MagiikaNoSuchCastError.new(from, self)
   end
+
+  def ==(other)
+    if self.class == other.class then
+      return true
+    end
+
+    if other.respond_to?(:value) then
+      val = @value.respond_to?(:unwrap_all) ? @value.unwrap : @value
+      obj = other.value.respond_to?(:unwrap_all) ? other.value.unwrap : other.value
+      return val == obj
+    end
+
+    return false
+  end
 end
 
 
