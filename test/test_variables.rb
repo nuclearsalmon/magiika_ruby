@@ -5,13 +5,13 @@ require 'test/unit'
 
 
 class TestDeclaration < Test::Unit::TestCase
-  def test_empty_decl
+  def test_empty_declaration
     r = parse_new(":e;e")
     assert_equal(MagicNode, r.class)
     assert_equal(EmptyNode, r.unwrap.class)
   end
 
-  def test_builtin_decl
+  def test_builtin_declaration
     magiika = Magiika.new
 
     r = magiika.parse(":i=1;i")
@@ -30,7 +30,30 @@ class TestDeclaration < Test::Unit::TestCase
     assert_equal(StrNode.new("!!!"), r.value)
   end
 
-  def test_builtin_assign
+
+  def test_builtin_magic_redeclare_same_type
+    magiika = Magiika.new
+
+    r = magiika.parse(":e = 100; e")
+    assert_equal(IntNode.new(100), r.value)
+
+    r = magiika.parse("e := 777; e")
+    assert_equal(IntNode.new(777), r.value)
+  end
+
+  def test_builtin_magic_redeclare_different_type
+    magiika = Magiika.new
+
+    r = magiika.parse(":e = 08.9002; e")
+    assert_equal(FltNode.new(8.9002), r.value)
+
+    r = magiika.parse("e := true; e")
+    assert_equal(BoolNode.new(true), r.value)
+  end
+end
+
+class TestAssignment
+  def test_builtin_reassign
     magiika = Magiika.new
 
     r = magiika.parse(":i=1;i")
