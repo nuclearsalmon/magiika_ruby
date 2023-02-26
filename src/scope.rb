@@ -59,4 +59,13 @@ class ScopeHandler
   def discard_scope
     @scopes.delete_at(-1)
   end
+
+  def temp_scope(&block)
+    begin
+      new_scope
+      block.call
+    ensure
+      discard_scope
+    end
+  end
 end

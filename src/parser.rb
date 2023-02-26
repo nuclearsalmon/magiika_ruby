@@ -73,16 +73,16 @@ class MagiikaParser
 
       rule :stmt do
         match(:syslib_call)
+
+        match(:if_stmt)
+        match(:while_stmt)
+
         match(:declare_stmt)
         match(:assign_stmt)
-        
-        match(:nested_stmt)
+
+        match(:cond)
       end
 
-      rule :nested_stmt do
-        match(:if_stmt)
-        match(:condition)
-      end
 
 
       # ✨ TYPES
@@ -95,8 +95,8 @@ class MagiikaParser
       rule :value do
         match(:literal)
         match("empty")              {EmptyNode.new}
-        match(:variable)
-        match("(", :condition, ")") {|_,cond,_| cond}
+        match(:var)
+        match("(", :cond, ")") {|_,cond,_| cond}
       end
       
       rule :literal do
@@ -144,7 +144,7 @@ class MagiikaParser
       # ✨ VARIABLES
       # ------------------------------------------------------------------------
 
-      rule :variable do
+      rule :var do
         match(:name) {
           |name|
           RetrieveVariable.new(name, scope_handler)
@@ -168,7 +168,7 @@ class MagiikaParser
         # eol handling
         match(":", :eol)           {nil}
 
-        match(":", :name, "=", :condition) {
+        match(":", :name, "=", :cond) {
           |_,name,_,value| 
           DeclareVariable.new("magic", name, value, scope_handler)
         }
@@ -200,7 +200,7 @@ class MagiikaParser
       # ✨ CONDITIONS
       # ------------------------------------------------------------------------
 
-      rule :condition do  # exists for the sake of readability
+      rule :cond do  # exists for the sake of readability
         match(:or_condition)
       end
 
@@ -284,47 +284,47 @@ class MagiikaParser
         match("}", :eol)
       end
 
-      rule :stmt_block do
+      rule :stmts_block do
         match(:l_sqbracket, :stmts, :r_sqbracket) {
           |_,stmts,_| stmts
         }
       end
 
       rule :if_stmt do
-        match("if", :condition, ":", :stmt, :elif_stmt) {
+        match("if", :cond, ":", :stmt, :elif_stmt) {
           |_,cond,_,stmt,elif|
           IfNode.new(cond, stmt, scope_handler, else_stmt=elif)
         }
-        match("if", :condition, ":", :stmt) {
+        match("if", :cond, ":", :stmt) {
           |_,cond,_,stmt|
           IfNode.new(cond, stmt, scope_handler)
         }
 
-        match("if", :condition, :stmt_block, :elif_stmt) {
+        match("if", :cond, :stmts_block, :elif_stmt) {
           |_,cond,stmts,elif|
           IfNode.new(cond, stmts, scope_handler, else_stmt=elif)
         }
-        match("if", :condition, :stmt_block) {
+        match("if", :cond, :stmts_block) {
           |_,cond,stmts|
           IfNode.new(cond, stmts, scope_handler)
         }
       end
 
       rule :elif_stmt do
-        match(:elif_keyword, :condition, ":", :stmt, :elif_stmt) {
+        match(:elif_keyword, :cond, ":", :stmt, :elif_stmt) {
           |_,cond,_,stmt,elif|
           IfNode.new(cond, stmt, scope_handler, elif_else=elif)
         }
-        match(:elif_keyword, :condition, ":", :stmt) {
+        match(:elif_keyword, :cond, ":", :stmt) {
           |_,cond,_,stmt|
           IfNode.new(cond, stmt, scope_handler)
         }
 
-        match(:elif_keyword, :condition, :stmt_block, :elif_stmt) {
+        match(:elif_keyword, :cond, :stmts_block, :elif_stmt) {
           |_,cond,stmts,elif|
           IfNode.new(cond, stmts, scope_handler, elif_else=elif)
         }
-        match(:elif_keyword, :condition, :stmt_block) {
+        match(:elif_keyword, :cond, :stmts_block) {
           |_,cond,stmts|
           IfNode.new(cond, stmts, scope_handler)
         }
@@ -339,10 +339,22 @@ class MagiikaParser
           IfNode.new(cond, stmt, scope_handler)
         }
 
-        match(:else_keyword, :stmt_block) {
+        match(:else_keyword, :stmts_block) {
           |_,stmts|
           cond = BoolNode.new(true)  # always eval to true
           IfNode.new(cond, stmts, scope_handler)
+        }
+      end
+
+      rule :while_stmt do
+        match("while", :cond, ":", :stmt) {
+          |_,cond,_,stmt|
+          WhileNode.new(cond, stmt, scope_handler)
+        }
+
+        match("while", :cond, :stmts_block) {
+          |_,cond,stmts|
+          WhileNode.new(cond, stmts, scope_handler)
         }
       end
 
@@ -351,7 +363,7 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :syslib_call do
-        match("\$", :condition) {|_,obj| PrintNode.new(obj)}
+        match("\$", :cond) {|_,obj| PrintNode.new(obj)}
       end
     end
   end
