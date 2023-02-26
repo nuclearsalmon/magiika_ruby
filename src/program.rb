@@ -102,6 +102,25 @@ class ExpressionNode < BaseNode
 end
 
 
+class IfNode < BaseNode
+  def initialize(cond, stmt, scope_handler, else_stmt = nil)
+    @cond, @stmt, @else_stmt = cond, stmt, else_stmt
+    @scope_handler = scope_handler
+  end
+
+  def eval
+    if @cond.bool_eval? then
+      @scope_handler.new_scope
+      result = @stmt.eval
+      @scope_handler.discard_scope
+      return result 
+    elsif @else_stmt
+      @else_stmt.eval
+    end
+  end
+end
+
+
 class PrintNode < ContainerTypeNode
   def eval
     value = @value.unwrap_all

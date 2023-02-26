@@ -72,13 +72,15 @@ class MagiikaParser
       end
 
       rule :stmt do
+        match(:syslib_call)
+        match(:declare_stmt)
+        match(:assign_stmt)
+        
         match(:nested_stmt)
       end
 
       rule :nested_stmt do
-        match(:syslib_call)
-        match(:declare_stmt)
-        match(:assign_stmt)
+        match(:if_stmt)
         match(:condition)
       end
 
@@ -153,7 +155,7 @@ class MagiikaParser
         # special declaration syntax
         #FIXME: This should later be inside a statement, not freestanding.
         #       This is temporary just for testing purposes.
-        match(:name, ":=", :expression) {
+        match(:name, ":=", :expr) {
           |name,_,value| 
           RedeclareVariable.new(name, value, scope_handler)
         }
@@ -177,7 +179,7 @@ class MagiikaParser
       end
 
       rule :static_declare_stmt do
-        match(:built_in_type, ":", :name, "=", :expression) {
+        match(:built_in_type, ":", :name, "=", :expr) {
           |type,_,name,_,value| 
           DeclareVariable.new(type, name, value, scope_handler)
         }
@@ -188,7 +190,7 @@ class MagiikaParser
       end
 
       rule :assign_stmt do
-        match(:name, "=", :expression) {
+        match(:name, "=", :expr) {
           |name,_,value| 
           AssignVariable.new(name, value, scope_handler)
         }
@@ -212,11 +214,11 @@ class MagiikaParser
       end
 
       rule :and_condition do
-        match(:and_condition, /(and|&&)/, :expression) {
+        match(:and_condition, /(and|&&)/, :expr) {
           |l,op,r| 
           ConditionNode.new(l, op, r)
         }
-        match(:expression)
+        match(:expr)
       end
 
 
@@ -225,8 +227,8 @@ class MagiikaParser
       
       # expression starting point. will propagate down
       # to higher and higher precedence, as with all the other rules.
-      rule :expression do
-        match(:expression, /(\+|-)/, :high_pred_expr) {
+      rule :expr do
+        match(:expr, /(\+|-)/, :high_pred_expr) {
           |l,op,r|
           ExpressionNode.new(l, op, r)
         }
@@ -256,6 +258,92 @@ class MagiikaParser
           ExpressionNode.new(EmptyNode.get_default, op, r)
         }
         match(:value)
+      end
+
+
+      # ✨ CONTROL FLOW
+      # ------------------------------------------------------------------------
+
+      rule :elif_keyword do
+        match(:eol, "elif")
+        match("elif")
+      end
+      
+      rule :else_keyword do
+        match(:eol, "else")
+        match("else")
+      end
+
+      rule :l_sqbracket do
+        match("{")
+        match(:eol, "{")
+      end
+
+      rule :r_sqbracket do
+        match("}")
+        match("}", :eol)
+      end
+
+      rule :stmt_block do
+        match(:l_sqbracket, :stmts, :r_sqbracket) {
+          |_,stmts,_| stmts
+        }
+      end
+
+      rule :if_stmt do
+        match("if", :condition, ":", :stmt, :elif_stmt) {
+          |_,cond,_,stmt,elif|
+          IfNode.new(cond, stmt, scope_handler, else_stmt=elif)
+        }
+        match("if", :condition, ":", :stmt) {
+          |_,cond,_,stmt|
+          IfNode.new(cond, stmt, scope_handler)
+        }
+
+        match("if", :condition, :stmt_block, :elif_stmt) {
+          |_,cond,stmts,elif|
+          IfNode.new(cond, stmts, scope_handler, else_stmt=elif)
+        }
+        match("if", :condition, :stmt_block) {
+          |_,cond,stmts|
+          IfNode.new(cond, stmts, scope_handler)
+        }
+      end
+
+      rule :elif_stmt do
+        match(:elif_keyword, :condition, ":", :stmt, :elif_stmt) {
+          |_,cond,_,stmt,elif|
+          IfNode.new(cond, stmt, scope_handler, elif_else=elif)
+        }
+        match(:elif_keyword, :condition, ":", :stmt) {
+          |_,cond,_,stmt|
+          IfNode.new(cond, stmt, scope_handler)
+        }
+
+        match(:elif_keyword, :condition, :stmt_block, :elif_stmt) {
+          |_,cond,stmts,elif|
+          IfNode.new(cond, stmts, scope_handler, elif_else=elif)
+        }
+        match(:elif_keyword, :condition, :stmt_block) {
+          |_,cond,stmts|
+          IfNode.new(cond, stmts, scope_handler)
+        }
+
+        match(:else_stmt)
+      end
+
+      rule :else_stmt do
+        match(:else_keyword, ":", :stmt) {
+          |_,_,stmt|
+          cond = BoolNode.new(true)  # always eval to true
+          IfNode.new(cond, stmt, scope_handler)
+        }
+
+        match(:else_keyword, :stmt_block) {
+          |_,stmts|
+          cond = BoolNode.new(true)  # always eval to true
+          IfNode.new(cond, stmts, scope_handler)
+        }
       end
 
 

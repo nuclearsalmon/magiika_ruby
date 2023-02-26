@@ -51,4 +51,12 @@ class ScopeHandler
   def set_var(name, obj)
     return access_scope(name, obj)
   end
+
+  def new_scope
+    @scopes << Hash.new
+  end
+
+  def discard_scope
+    @scopes.delete_at(-1)
+  end
 end
