@@ -59,37 +59,13 @@ class ConditionNode < BaseNode
 end
 
 
-class ExpressionNode < BaseNode
-  def initialize(l, op, r)
-    @l, @op, @r = l, op, r
+class BooleanInverterNode < BaseNode
+  def initialize(value)
+    @value = value
   end
 
   def unwrap
-    l = @l.unwrap
-    r = @r.unwrap
-
-    if l == EmptyNode.get_default then
-      if !r.class.method_defined?(@op) then
-        raise	MagiikaUnsupportedOperationError.new("`#{@op}' `#{r.type}'.")
-      end
-
-      return r.public_send(@op)
-    elsif r == EmptyNode.get_default then
-      raise MagiikaUnsupportedOperationError.new(
-        "right-hand value must not be nil.")
-    else
-      if !l.class.method_defined?(@op) then
-        raise	MagiikaUnsupportedOperationError.new(
-          "`#{l.type}' `#{@op}' `#{r.type}'")
-      end
-
-      if l.type != r.type then
-        raise	MagiikaUnsupportedOperationError.new(
-          "mismatched types: `#{l.type}' #{@op} `#{r.type}'")
-      end
-
-      return l.public_send(@op, r)
-    end
+    return BoolNode.new(!(value.bool_eval?))
   end
 
   def output
@@ -98,6 +74,62 @@ class ExpressionNode < BaseNode
 
   def eval
     return unwrap.eval
+  end
+
+  def bool_eval?
+    return eval
+  end
+end
+
+
+class UnaryExpressionNode < BaseNode
+  def initialize(op, obj)
+    @op, @obj = op, obj
+  end
+
+  def unwrap
+    obj = @obj.unwrap_all
+
+    if obj.class.method_defined?(@op) then
+      return obj.public_send(@op)
+    else
+      raise MagiikaUnsupportedOperationError.new("`#{obj.type}' does not support `#{@op}'.")
+    end
+  end
+
+  def eval
+    return unwrap.eval
+  end
+
+  def output
+    return eval
+  end
+end
+
+
+class BinaryExpressionNode < BaseNode
+  def initialize(l, op, r)
+    @l, @op, @r = l, op, r
+  end
+
+  def unwrap
+    l = @l.unwrap
+    r = @r.unwrap
+    
+    if l.class.method_defined?(@op) then
+      return l.public_send(@op, r)
+    else
+      raise MagiikaUnsupportedOperationError.new(
+        "`#{l.type}' does not support `#{@op}'.")
+    end
+  end
+
+  def eval
+    return unwrap.eval
+  end
+
+  def output
+    return eval
   end
 end
 

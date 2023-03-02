@@ -8,6 +8,7 @@ require_relative './operators.rb'
 # unnecessary thanks to duck typing, but it makes reading
 # the relationships between different nodes easier.
 
+
 class BaseNode
   # evaluate
   def eval
@@ -15,7 +16,7 @@ class BaseNode
   end
 
   def bool_eval?
-    raise MagiikaNotImplementedError.new
+    return false
   end
 
   # optional method: `output'
@@ -156,10 +157,9 @@ end
 
 
 class IntNode < ContainerTypeNode
-  include AddOperator
-  include SubtractOperator
-  include MultiplyOperator
-  include DivideOperator
+  include NodeSafety
+  include OperatorUtils
+  include IncDecOperators
 
   def initialize(value)
     if value.class != Integer then
@@ -183,14 +183,54 @@ class IntNode < ContainerTypeNode
   def self.type
     return "int"
   end
+
+  def +(obj=nil)
+    return self if obj == nil
+
+    verify_class(obj)
+    return passthrough(:+, obj)
+  end
+
+  def -(obj=nil)
+    return self.class.new(-@value) if obj == nil
+
+    verify_class(obj)
+    return passthrough(:-, obj)
+  end
+
+  def *(obj)
+    verify_class(obj)
+    return passthrough(:*, obj)
+  end
+
+  def /(obj)
+    verify_class(obj)
+    return passthrough(:/, obj)
+  end
+
+  def int_div(obj)
+    verify_classes(obj, [FltNode, ])
+
+    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
+    end
+    
+    value = @value.to_f.public_send(:/, obj.value).truncate.to_i
+    
+    return self.class.new(value)
+  end
+
+  def %(obj)
+    verify_class(obj)
+    return passthrough(:%, obj)
+  end
 end
 
 
 class FltNode < ContainerTypeNode
-  include AddOperator
-  include SubtractOperator
-  include MultiplyOperator
-  include DivideOperator
+  include NodeSafety
+  include OperatorUtils
+  include IncDecOperators
 
   def initialize(value)
     if value.class != Integer && value.class != Float then
@@ -213,6 +253,51 @@ class FltNode < ContainerTypeNode
 
   def self.type
     return "flt"
+  end
+
+  def +(obj=nil)
+    return self if obj == nil
+
+    verify_classes(obj, [IntNode, ])
+    value = passthrough_value(:+, obj).to_f
+    return self.class.new(value)
+  end
+
+  def -(obj=nil)
+    return self.class.new(-@value) if obj == nil
+
+    verify_classes(obj, [IntNode, ])
+    value = passthrough_value(:-, obj).to_f
+    return self.class.new(value)
+  end
+
+  def *(obj)
+    verify_classes(obj, [IntNode, ])
+    value = passthrough_value(:*, obj).to_f
+    return self.class.new(value)
+  end
+
+  def /(obj)
+    verify_classes(obj, [IntNode, ])
+    value = round_float(passthrough_value(:/, obj)).to_f
+    return self.class.new(value)
+  end
+
+  def int_div(obj)
+    verify_classes(obj, [IntNode, ])
+
+    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
+    end
+    
+    value = @value.to_f.public_send(:/, obj.value).truncate.to_f
+    
+    return self.class.new(value)
+  end
+
+  def %(obj)
+    verify_classes(obj, [IntNode, ])
+    return passthrough(:%, obj)
   end
 end
 
@@ -270,7 +355,8 @@ end
 
 
 class StrNode < ContainerTypeNode
-  include JoinOperator
+  include NodeSafety
+  include OperatorUtils
 
   def initialize(value)
     if value.class != String then
@@ -293,6 +379,13 @@ class StrNode < ContainerTypeNode
 
   def self.type
     return "str"
+  end
+
+  def +(obj=nil)
+    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'")
+
+    verify_classes(obj, [ChrNode, ])
+    return passthrough(:+, obj)
   end
 end
 

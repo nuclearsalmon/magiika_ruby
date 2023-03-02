@@ -2,6 +2,7 @@
 
 require_relative './error.rb'
 require_relative './rdparse.rb'
+require_relative './safety.rb'
 require_relative './nodes.rb'
 require_relative './program.rb'
 require_relative './scope.rb'
@@ -27,7 +28,7 @@ class MagiikaParser
 
       # comments
       token(/#.*$/)
-      token(/\/\/.*$/)
+      #token(/\/\/.*$/)
       token(/\/\*([^*]|\r?\n|(\*+([^*\/]|\r?\n)))*\*+\//)
       
       # literals
@@ -38,14 +39,17 @@ class MagiikaParser
       token(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|t| t}       # str literal
       token(/'(.?)'/)               {|t| t}             # chr literal
 
-      # multi-character operators
-      token(/(:=|\|\||&&)/)         {|t| t}
+      # multi-character operators      
+      token(/(\|\||&&)/)            {|t| t}
+      token(/(==|!=|>=|<=)/)        {|t| t}
+      token(/(:=)/)                 {|t| t}
+      token(/(\+\+|--|\/\/)/)       {|t| t}
 
       # single-character operators
-      token(/(=|\+|-|\*|\/|%|&|!|<|>|\$)/) {|t| t}
+      token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}
 
       # symbols
-      token(/(\[|\]|\(|\)|\{|\}|,|\.|:)/) {|t| t}
+      token(/(\[|\]|\(|\)|\{|\}|,|\.|:|\$)/) {|t| t}
       
       # names
       token(/[A-Za-z][A-Za-z_\-0-9]*/) {|t| t}
@@ -67,6 +71,7 @@ class MagiikaParser
         match(:eol, :stmts)         {|stmt,stmts|   StmtsNode.new(stmt, stmts)}
         match(:stmt, :eol)          {|stmt,_|       StmtsNode.new(stmt, nil)}
         match(:eol)                 {|stmt|         StmtsNode.new(stmt, nil)}
+
         # handle files that don't end in an EOL
         match(:stmt)                {|stmt|         StmtsNode.new(stmt, nil)}
       end
@@ -96,7 +101,7 @@ class MagiikaParser
         match(:literal)
         match("empty")              {EmptyNode.new}
         match(:var)
-        match("(", :cond, ")") {|_,cond,_| cond}
+        match("(", :cond, ")")      {|_,cond,_| cond}
       end
       
       rule :literal do
@@ -135,9 +140,7 @@ class MagiikaParser
       end
 
       rule :str do
-        match(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {
-          |str| StrNode.new(str[1..-2])
-        }
+        match(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|str| StrNode.new(str[1..-2])}
       end
 
 
@@ -145,10 +148,7 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :var do
-        match(:name) {
-          |name|
-          RetrieveVariable.new(name, scope_handler)
-        }
+        match(:name) {|name| RetrieveVariable.new(name, scope_handler)}
       end
 
       rule :declare_stmt do
@@ -165,13 +165,14 @@ class MagiikaParser
       end
 
       rule :magic_declare_stmt do
-        # eol handling
-        match(":", :eol)           {nil}
-
         match(":", :name, "=", :cond) {
           |_,name,_,value| 
           DeclareVariable.new("magic", name, value, scope_handler)
         }
+
+        # eol handling
+        match(":", :eol)           {nil}
+
         match(":", :name) {
           |_,name| 
           DeclareVariable.new("magic", name, scope_handler)
@@ -191,7 +192,7 @@ class MagiikaParser
 
       rule :assign_stmt do
         match(:name, "=", :expr) {
-          |name,_,value| 
+          |name,_,value|
           AssignVariable.new(name, value, scope_handler)
         }
       end
@@ -201,23 +202,35 @@ class MagiikaParser
       # ------------------------------------------------------------------------
 
       rule :cond do  # exists for the sake of readability
-        match(:or_condition)
+        match(:or_cond)
       end
 
-      rule :or_condition do
-        match(:or_condition, /(or|\|\|)/, :and_condition) {
-          |l,op,r| 
-          ConditionNode.new(l, op, r)
-        }
-        match(:and_condition)
-        
+      rule :or_cond do
+        match(:or_cond, "||", :and_cond) {|l,op,r| ConditionNode.new(l, op, r)}
+        match(:or_cond, "or", :and_cond) {|l,op,r| ConditionNode.new(l, op, r)}
+
+        match(:and_cond)
       end
 
-      rule :and_condition do
-        match(:and_condition, /(and|&&)/, :expr) {
-          |l,op,r| 
-          ConditionNode.new(l, op, r)
-        }
+      rule :and_cond do
+        match(:and_cond, "&&", :expr) {|l,op,r| ConditionNode.new(l, op, r)}
+        match(:and_cond, "and", :expr) {|l,op,r| ConditionNode.new(l, op, r)}
+
+        match(:comp)
+      end
+
+      rule :comp_op do
+        match("==")
+        match("!=")
+        match(">")
+        match("<")
+        match(">=")
+        match("<=")
+      end
+
+      rule :comp do
+        match(:expr, :comp_op, :expr) {|l,op,r| ConditionNode.new(l, op, r)}
+        match("!", :cond)           {|_,value| BooleanInverterNode.new(value)}
         match(:expr)
       end
 
@@ -228,34 +241,62 @@ class MagiikaParser
       # expression starting point. will propagate down
       # to higher and higher precedence, as with all the other rules.
       rule :expr do
-        match(:expr, /(\+|-)/, :high_pred_expr) {
+        match(:expr, "+", :term) {
           |l,op,r|
-          ExpressionNode.new(l, op, r)
+          BinaryExpressionNode.new(l, op, r)
         }
-        match(:high_pred_expr)
+        match(:expr, "-", :term) {
+          |l,op,r|
+          BinaryExpressionNode.new(l, op, r)
+        }
+        match(:term)
       end
 
       # higher precedence expressions
-      rule :high_pred_expr do
-        match(:high_pred_expr, /(\*|\/)/, :unary_prefix_op) {
-          |l,op,r| 
-          ExpressionNode.new(l, op, r)
+      rule :term do
+        match(:term, "*", :unary_prefix_op) {
+          |l,op,r|
+          BinaryExpressionNode.new(l, op, r)
+        }
+        match(:term, "/", :unary_prefix_op) {
+          |l,op,r|
+          BinaryExpressionNode.new(l, op, r)
+        }
+        match(:term, "%", :unary_prefix_op) {
+          |l,op,r|
+          BinaryExpressionNode.new(l, op, r)
+        }
+        match(:term, "//", :unary_prefix_op) {
+          |l,op,r|
+          BinaryExpressionNode.new(l, :int_div, r)
         }
         match(:unary_prefix_op)
       end
 
       rule :unary_prefix_op do
-        match(/(-|\+\+|--)/, :unary_postfix_op) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default, op, r)
+        match("-", :unary_postfix_op) {
+          |op,obj|
+          UnaryExpressionNode.new(op, obj)
+        }
+        match("++", :unary_postfix_op) {
+          |_,obj|
+          UnaryExpressionNode.new(:pre_inc, obj)
+        }
+        match("--", :unary_postfix_op) {
+          |_,obj|
+          UnaryExpressionNode.new(:pre_dec, obj)
         }
         match(:unary_postfix_op)
       end
 
       rule :unary_postfix_op do
-        match(:value, /(\+\+|--)/) {
-          |op,r| 
-          ExpressionNode.new(EmptyNode.get_default, op, r)
+        match(:value, "++") {
+          |obj,_|
+          UnaryExpressionNode.new(:post_inc, obj)
+        }
+        match(:value, "--") {
+          |obj,_|
+          UnaryExpressionNode.new(:post_dec, obj)
         }
         match(:value)
       end

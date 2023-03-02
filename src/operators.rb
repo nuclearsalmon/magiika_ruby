@@ -1,68 +1,42 @@
 #!/usr/bin/env ruby
 
+
 module OperatorUtils
-  def verify_obj_type(obj)
-    if obj.class != self.class then
-      raise MagiikaMismatchedTypeError.new(obj, self)
+  def passthrough_value(op, obj)
+    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
     end
+    
+    return @value.public_send(op, obj.value)
+  end
+
+  def passthrough(op, obj)
+    value = passthrough_value(op, obj)
+    return self.class.new(value)
   end
 end
 
 
-module AddOperator
-  include OperatorUtils
-
-  # FIXME: should any of these actually ever be nil? and what about EmptyNode?
-  def +(obj=nil)
-    return self if obj == nil
-    verify_obj_type(obj)
-
-    return self.class.new(@value + obj.value)
+module IncDecOperators
+  def pre_inc
+    @value += 1
+    return self.clone
   end
-end
 
-
-module JoinOperator
-  include OperatorUtils
-
-  def +(obj)
-    raise MagiikaUnsupportedOperationError.new("unexpected nil") if obj == nil
-    verify_obj_type(obj)
-
-    return self.class.new(@value + obj.value)
+  def pre_dec
+    @value -= 1
+    return self.clone
   end
-end
 
-
-module SubtractOperator
-  include OperatorUtils
-
-  def -(obj=nil)
-    return self.class.new(-@value) if obj == nil
-    verify_obj_type(obj)
-
-    return self.class.new(@value - obj.value)
+  def post_inc
+    copy = self.clone
+    @value += 1
+    return copy
   end
-end
 
-
-module MultiplyOperator
-  include OperatorUtils
-
-  def *(obj)
-    verify_obj_type(obj)
-
-    return self.class.new(@value * obj.value)
-  end
-end
-
-
-module DivideOperator
-  include OperatorUtils
-
-  def /(obj)
-    verify_obj_type(obj)
-
-    return self.class.new(@value / obj.value)
+  def post_dec
+    copy = self.clone
+    @value -= 1
+    return copy
   end
 end

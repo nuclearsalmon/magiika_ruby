@@ -113,7 +113,7 @@ class RedeclareVariable < BaseNode
       raise MagiikaUnsupportedOperationError.new(
         "redeclaration to nil.")
     else
-      obj = MagicNode.new(@object)  # wrap in magic
+      obj = MagicNode.new(@object.eval)  # wrap in magic
     end
 
     @scope_handler.relaxed_add_var(@name, obj)
