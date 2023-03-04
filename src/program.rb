@@ -27,45 +27,13 @@ class StmtsNode < BaseNode
 end
 
 
-class ConditionNode < BaseNode
-  def initialize(l, op, r)
-    @l, @op, @r = l, op, r
-  end
-
-  def unwrap
-    l, r = @l.unwrap, @r.unwrap
-    case @op
-    when "and", "&&"
-      return BoolNode.new(l.bool_eval? && r.bool_eval?)
-    when "or", "||"
-      return BoolNode.new(l.bool_eval? || r.bool_eval?)
-    else
-      raise MagiikaUnsupportedOperationError.new(
-        "`#{get_expanded_type(l)} #{@op} #{get_expanded_type(r)}'.")
-    end
-  end
-
-  def output
-    return eval
-  end
-
-  def eval
-    return unwrap.eval
-  end
-
-  def bool_eval?
-    return eval
-  end
-end
-
-
 class BooleanInverterNode < BaseNode
   def initialize(value)
     @value = value
   end
 
   def unwrap
-    return BoolNode.new(!(value.bool_eval?))
+    return BoolNode.new(!(@value.bool_eval?))
   end
 
   def output
@@ -93,7 +61,8 @@ class UnaryExpressionNode < BaseNode
     if obj.class.method_defined?(@op) then
       return obj.public_send(@op)
     else
-      raise MagiikaUnsupportedOperationError.new("`#{obj.type}' does not support `#{@op}'.")
+      raise MagiikaUnsupportedOperationError.new(
+        "`#{obj.type}' does not support `#{@op}'.")
     end
   end
 
@@ -115,7 +84,7 @@ class BinaryExpressionNode < BaseNode
   def unwrap
     l = @l.unwrap
     r = @r.unwrap
-    
+
     if l.class.method_defined?(@op) then
       return l.public_send(@op, r)
     else
@@ -126,6 +95,10 @@ class BinaryExpressionNode < BaseNode
 
   def eval
     return unwrap.eval
+  end
+
+  def bool_eval?
+    return unwrap.bool_eval?
   end
 
   def output

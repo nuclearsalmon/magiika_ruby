@@ -15,10 +15,6 @@ class BaseNode
     raise MagiikaNotImplementedError.new
   end
 
-  def bool_eval?
-    return false
-  end
-
   # optional method: `output'
   # evaluate str intended for output (not the same as to_s)
 
@@ -52,6 +48,8 @@ end
 
 
 class TypeNode < BaseNode
+  include BooleanOperators
+
   # create an instance where default values are used
   # (if values are applicable to the type, otherwise it will
   # likely just be a call to self.class.new)
@@ -64,9 +62,14 @@ class TypeNode < BaseNode
     return self
   end
 
-  # evaluate to boolean
+  def to_bytes
+    return [0x0]  # false
+  end
+
   def bool_eval?
-    return false
+    # coerce bytes into boolean result
+    to_bytes.each {|e| return false if e != 0x0 }
+    return true
   end
 
   # evaluate str intended for output (not the same as to_s)
@@ -142,10 +145,6 @@ class EmptyNode < TypeNode
     return self
   end
 
-  def bool_eval?
-    return false
-  end
-
   def output
     return type
   end
@@ -160,6 +159,7 @@ class IntNode < ContainerTypeNode
   include NodeSafety
   include OperatorUtils
   include IncDecOperators
+  include BitwiseOperators
 
   def initialize(value)
     if value.class != Integer then
@@ -182,6 +182,10 @@ class IntNode < ContainerTypeNode
 
   def self.type
     return "int"
+  end
+
+  def to_bytes
+    return unsign(@value)
   end
 
   def +(obj=nil)
@@ -231,6 +235,7 @@ class FltNode < ContainerTypeNode
   include NodeSafety
   include OperatorUtils
   include IncDecOperators
+  include BitwiseOperators
 
   def initialize(value)
     if value.class != Integer && value.class != Float then
@@ -253,6 +258,10 @@ class FltNode < ContainerTypeNode
 
   def self.type
     return "flt"
+  end
+
+  def to_bytes
+    return unsign(@value)
   end
 
   def +(obj=nil)
@@ -303,6 +312,8 @@ end
 
 
 class BoolNode < ContainerTypeNode
+  include BitwiseOperators
+
   def initialize(value)
     if value.class != TrueClass and value.class != FalseClass then
       raise MagiikaMismatchedTypeError.new(value, self.type)
@@ -325,31 +336,9 @@ class BoolNode < ContainerTypeNode
   def self.type
     return "bool"
   end
-end
 
-
-class ChrNode < ContainerTypeNode
-  def initialize(value)
-    if value.class != String || value.length > 1 then
-      raise MagiikaMismatchedTypeError.new(value, self.type)
-    end
-    super(value)
-  end
-
-  def self.get_default
-    return ChrNode.new("")
-  end
-
-  def bool_eval?
-    return @value != ""
-  end
-
-  def output
-    return "\'" + @value.to_s + "\'"
-  end
-
-  def self.type
-    return "chr"
+  def to_bytes
+    return [@value ? 0x0 : 0x1]
   end
 end
 
@@ -357,6 +346,7 @@ end
 class StrNode < ContainerTypeNode
   include NodeSafety
   include OperatorUtils
+  include BitwiseOperators
 
   def initialize(value)
     if value.class != String then
@@ -382,10 +372,17 @@ class StrNode < ContainerTypeNode
   end
 
   def +(obj=nil)
-    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'")
+    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'") if obj == nil
 
-    verify_classes(obj, [ChrNode, ])
+    verify_class()
     return passthrough(:+, obj)
+  end
+
+  def to_bytes
+    # Unpack to 8-bit unsigned integers because signed integers are completely
+    # goddamn unreadable to any normal person. 8-bit because
+    # there's rarely any need for 16-bit here, this is most likely just
+    return @value.unpack("C*")
   end
 end
 
@@ -409,7 +406,7 @@ class MagicNode < ContainerTypeNode
   end
 
   def bool_eval?
-    return @value.bool_eval?
+    return @value != EmptyNode.get_default
   end
 
   def output
@@ -431,6 +428,7 @@ BUILT_IN_TYPES = {
   "bool" => BoolNode, 
   "int" => IntNode, 
   "flt" => FltNode,
+  "str" => StrNode,
   "magic" => MagicNode,}
 
 
