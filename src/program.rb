@@ -98,7 +98,7 @@ class BinaryExpressionNode < BaseNode
   end
 
   def bool_eval?
-    return unwrap.bool_eval?
+    return unwrap.bool_eval?  # fixme optimize
   end
 
   def output

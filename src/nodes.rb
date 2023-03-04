@@ -125,8 +125,8 @@ class ContainerTypeNode < TypeNode
   end
 
   def ==(other)
-    if self.class == other.class then
-      return true
+    if self.class != other.class then
+      return false
     elsif other.respond_to?(:value) then
       val = @value.respond_to?(:unwrap_all) ? @value.unwrap : @value
       obj = other.value.respond_to?(:unwrap_all) ? other.value.unwrap : other.value
@@ -194,6 +194,16 @@ class IntNode < ContainerTypeNode
 
   def to_bytes
     return unsign(@value)
+  end
+
+  def ==(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value(:==, other))
+  end
+
+  def !=(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value('!=', other))
   end
 
   def >(other)
@@ -290,6 +300,16 @@ class FltNode < ContainerTypeNode
 
   def to_bytes
     return unsign(@value)
+  end
+
+  def ==(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value(:==, other))
+  end
+
+  def !=(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value('!=', other))
   end
 
   def >(other)
