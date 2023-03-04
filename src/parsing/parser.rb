@@ -33,19 +33,19 @@ class MagiikaParser
       # ✨ TOKENS
       # ------------------------------------------------------------------------
 
-      self.instance_eval &TOKENS_PROC
+      instance_eval &TOKENS_PROC
 
 
       # ✨ MATCHES
       # ------------------------------------------------------------------------
 
-      self.instance_eval &COMMONS_PROC
-      self.instance_exec scope_handler, &PROGRAM_PROC
-      self.instance_eval &TYPES_PROC
-      self.instance_exec scope_handler, &VARIABLES_PROC
-      self.instance_exec scope_handler, &FUNCTIONS_PROC
-      self.instance_eval &CONDITIONS_PROC
-      self.instance_eval &EXPRESSIONS_PROC
+      instance_eval &COMMONS_PROC
+      instance_exec scope_handler, &PROGRAM_PROC
+      instance_eval &TYPES_PROC
+      instance_exec scope_handler, &VARIABLES_PROC
+      instance_exec scope_handler, &FUNCTIONS_PROC
+      instance_eval &CONDITIONS_PROC
+      instance_eval &EXPRESSIONS_PROC
     end
   end
 end
