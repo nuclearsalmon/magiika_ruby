@@ -110,6 +110,10 @@ class TypeNode < BaseNode
   def ==(other)
     return self.class == other.class
   end
+
+  def !=(other)
+    return !(self == other)
+  end
 end
 
 
@@ -130,6 +134,10 @@ class ContainerTypeNode < TypeNode
     end
 
     return false
+  end
+
+  def !=(other)
+    return !(self == other)
   end
 end
 
@@ -188,45 +196,65 @@ class IntNode < ContainerTypeNode
     return unsign(@value)
   end
 
-  def +(obj=nil)
-    return self if obj == nil
-
-    verify_class(obj)
-    return passthrough(:+, obj)
+  def >(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value(:>, other))
+  end
+  
+  def <(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value(:<, other))
+  end
+  
+  def >=(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value(:>=, other))
+  end
+  
+  def <=(other)
+    verify_classes(other, [FltNode, ])
+    return BoolNode.new(passthrough_value(:<=, other))
   end
 
-  def -(obj=nil)
-    return self.class.new(-@value) if obj == nil
+  def +(other=nil)
+    return self if other == nil
 
-    verify_class(obj)
-    return passthrough(:-, obj)
+    verify_class(other)
+    return passthrough(:+, other)
   end
 
-  def *(obj)
-    verify_class(obj)
-    return passthrough(:*, obj)
+  def -(other=nil)
+    return self.class.new(-@value) if other == nil
+
+    verify_class(other)
+    return passthrough(:-, other)
   end
 
-  def /(obj)
-    verify_class(obj)
-    return passthrough(:/, obj)
+  def *(other)
+    verify_class(other)
+    return passthrough(:*, other)
   end
 
-  def int_div(obj)
-    verify_classes(obj, [FltNode, ])
+  def /(other)
+    verify_class(other)
+    return passthrough(:/, other)
+  end
 
-    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
-      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
+  def int_div(other)
+    verify_classes(other, [FltNode, ])
+
+    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+      raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
     end
     
-    value = @value.to_f.public_send(:/, obj.value).truncate.to_i
+    value = @value.to_f.public_send(:/, other.value).truncate.to_i
     
     return self.class.new(value)
   end
 
-  def %(obj)
-    verify_class(obj)
-    return passthrough(:%, obj)
+  def %(other)
+    verify_class(other)
+    return passthrough(:%, other)
   end
 end
 
@@ -264,49 +292,69 @@ class FltNode < ContainerTypeNode
     return unsign(@value)
   end
 
-  def +(obj=nil)
-    return self if obj == nil
+  def >(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value(:>, other))
+  end
+  
+  def <(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value(:<, other))
+  end
+  
+  def >=(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value(:>=, other))
+  end
+  
+  def <=(other)
+    verify_classes(other, [IntNode, ])
+    return BoolNode.new(passthrough_value(:<=, other))
+  end
 
-    verify_classes(obj, [IntNode, ])
-    value = passthrough_value(:+, obj).to_f
+  def +(other=nil)
+    return self if other == nil
+
+    verify_classes(other, [IntNode, ])
+    value = passthrough_value(:+, other).to_f
     return self.class.new(value)
   end
 
-  def -(obj=nil)
-    return self.class.new(-@value) if obj == nil
+  def -(other=nil)
+    return self.class.new(-@value) if other == nil
 
-    verify_classes(obj, [IntNode, ])
-    value = passthrough_value(:-, obj).to_f
+    verify_classes(other, [IntNode, ])
+    value = passthrough_value(:-, other).to_f
     return self.class.new(value)
   end
 
-  def *(obj)
-    verify_classes(obj, [IntNode, ])
-    value = passthrough_value(:*, obj).to_f
+  def *(other)
+    verify_classes(other, [IntNode, ])
+    value = passthrough_value(:*, other).to_f
     return self.class.new(value)
   end
 
-  def /(obj)
-    verify_classes(obj, [IntNode, ])
-    value = round_float(passthrough_value(:/, obj)).to_f
+  def /(other)
+    verify_classes(other, [IntNode, ])
+    value = round_float(passthrough_value(:/, other)).to_f
     return self.class.new(value)
   end
 
-  def int_div(obj)
-    verify_classes(obj, [IntNode, ])
+  def int_div(other)
+    verify_classes(other, [IntNode, ])
 
-    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
-      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
+    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+      raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
     end
     
-    value = @value.to_f.public_send(:/, obj.value).truncate.to_f
+    value = @value.to_f.public_send(:/, other.value).truncate.to_f
     
     return self.class.new(value)
   end
 
-  def %(obj)
-    verify_classes(obj, [IntNode, ])
-    return passthrough(:%, obj)
+  def %(other)
+    verify_classes(other, [IntNode, ])
+    return passthrough(:%, other)
   end
 end
 
@@ -371,11 +419,11 @@ class StrNode < ContainerTypeNode
     return "str"
   end
 
-  def +(obj=nil)
-    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'") if obj == nil
+  def +(other=nil)
+    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'") if other == nil
 
     verify_class()
-    return passthrough(:+, obj)
+    return passthrough(:+, other)
   end
 
   def to_bytes
