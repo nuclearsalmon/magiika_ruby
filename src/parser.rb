@@ -37,6 +37,7 @@ class MagiikaParser
       token(/true/)                 {|t| :true}         # bool literal
       token(/false/)                {|t| :false}        # bool literal
       token(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|t| t}       # str literal
+      token(/'([^'\\]*(?:\\.[^'\\]*)*)'/) {|t| t}       # str literal
 
       # multi-character operators      
       token(/(\|\||&&|!\||!&|!^)/)  {|t| t}
@@ -134,6 +135,7 @@ class MagiikaParser
 
       rule :str do
         match(/"([^"\\]*(?:\\.[^"\\]*)*)"/) {|str| StrNode.new(str[1..-2])}
+        match(/'([^'\\]*(?:\\.[^'\\]*)*)'/) {|str| StrNode.new(str[1..-2])}
       end
 
 

@@ -24,7 +24,7 @@ class TestDeclaration < Test::Unit::TestCase
     assert_equal(BoolNode.new(true), r.value)
 
     r = magiika.parse(":c='!';c")
-    assert_equal(ChrNode.new("!"), r.value)
+    assert_equal(StrNode.new("!"), r.value)
 
     r = magiika.parse(":s=\"!!!\";s")
     assert_equal(StrNode.new("!!!"), r.value)
@@ -66,7 +66,7 @@ class TestAssignment
     assert_equal(BoolNode.new(true), r.value)
 
     r = magiika.parse(":c='!';c")
-    assert_equal(ChrNode.new("!"), r.value)
+    assert_equal(StrNode.new("!"), r.value)
 
     r = magiika.parse(":s=\"!!!\";s")
     assert_equal(StrNode.new("!!!"), r.value)

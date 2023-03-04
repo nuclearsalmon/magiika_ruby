@@ -5,7 +5,7 @@ require_relative './utils.rb'
 module OperatorUtils
   def passthrough_value(op, obj)
     if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
-      raise MagiikaMismatchedTypeError("`#{self}', `#{obj}'.")
+      raise MagiikaMismatchedTypeError.new(obj, self.class)
     end
     
     return @value.public_send(op, obj.value)

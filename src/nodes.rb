@@ -128,8 +128,8 @@ class ContainerTypeNode < TypeNode
     if self.class != other.class then
       return false
     elsif other.respond_to?(:value) then
-      val = @value.respond_to?(:unwrap_all) ? @value.unwrap : @value
-      obj = other.value.respond_to?(:unwrap_all) ? other.value.unwrap : other.value
+      val = @value.respond_to?(:unwrap) ? @value.unwrap : @value
+      obj = other.value.respond_to?(:unwrap) ? other.value.unwrap : other.value
       return val == obj
     end
 
@@ -197,13 +197,13 @@ class IntNode < ContainerTypeNode
   end
 
   def ==(other)
-    verify_classes(other, [FltNode, ])
-    return BoolNode.new(passthrough_value(:==, other))
+    obj = other.respond_to?(:value) ? other.value : other
+    return @value.public_send('==', obj)
   end
 
   def !=(other)
-    verify_classes(other, [FltNode, ])
-    return BoolNode.new(passthrough_value('!=', other))
+    obj = other.respond_to?(:value) ? other.value : other
+    return @value.public_send('!=', obj)
   end
 
   def >(other)
@@ -303,13 +303,13 @@ class FltNode < ContainerTypeNode
   end
 
   def ==(other)
-    verify_classes(other, [IntNode, ])
-    return BoolNode.new(passthrough_value(:==, other))
+    obj = other.respond_to?(:value) ? other.value : other
+    return @value.public_send('==', obj)
   end
 
   def !=(other)
-    verify_classes(other, [IntNode, ])
-    return BoolNode.new(passthrough_value('!=', other))
+    obj = other.respond_to?(:value) ? other.value : other
+    return @value.public_send('!=', obj)
   end
 
   def >(other)
