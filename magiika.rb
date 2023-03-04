@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require_relative './src/parser.rb'
+require_relative './src/parsing/parser.rb'
 
 
 ANSI_RESET              = "\x1b[m"
