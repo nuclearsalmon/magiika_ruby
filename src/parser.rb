@@ -7,6 +7,8 @@ require_relative './nodes.rb'
 require_relative './program.rb'
 require_relative './scope.rb'
 require_relative './variable.rb'
+require_relative './functions.rb'
+require_relative './classes.rb'
 
 require 'logger'
 
@@ -15,9 +17,9 @@ class MagiikaParser
   attr_reader :parser
 
   def initialize
-    @scope_handler = ScopeHandler.new
+    scope_handler = ScopeHandler.new
     # create a variable so we can use the ScopeHandler inside the parser block
-    scope_handler = @scope_handler
+    scope_handler = scope_handler
     
     @parser = Parser.new("Magiika") do
       # ✨ TOKENS
@@ -82,6 +84,9 @@ class MagiikaParser
         match(:if_stmt)
         match(:while_stmt)
 
+        match(:func_definition)
+        match(:func_call)
+
         match(:declare_stmt)
         match(:assign_stmt)
 
@@ -112,12 +117,18 @@ class MagiikaParser
       end
 
       rule :built_in_type do
+        match("empty")
         match("magic")
         match("bool")
         match("flt")
         match("int")
         match("str")
         match("lst")
+      end
+
+      rule :type do
+        match(:built_in_type)
+        match(:name)
       end
 
       rule :flt do
@@ -371,6 +382,48 @@ class MagiikaParser
       # ✨ CONTROL FLOW
       # ------------------------------------------------------------------------
 
+      rule :l_curbracket do
+        match("{")
+        match(:eol, "{")
+      end
+
+      rule :r_curbracket do
+        match("}")
+        match("}", :eol)
+      end
+
+      rule :curbracket_block do
+        match(:l_curbracket, :r_curbracket)
+      end
+
+      rule :l_parenthesis do
+        match("(")
+        match(:eol, "(")
+      end
+
+      rule :r_parenthesis do
+        match(")")
+        match(")", :eol)
+      end
+
+      rule :parenthesis_block do
+        match(:l_parenthesis, :r_parenthesis)
+      end
+
+      rule :l_sqbracket do
+        match("[")
+        match(:eol, "]")
+      end
+
+      rule :r_sqbracket do
+        match("]")
+        match("]", :eol)
+      end
+
+      rule :sqbracket_block do
+        match(:l_sqbracket, :r_sqbracket)
+      end
+
       rule :elif_keyword do
         match(:eol, "elif")
         match("elif")
@@ -381,18 +434,8 @@ class MagiikaParser
         match("else")
       end
 
-      rule :l_sqbracket do
-        match("{")
-        match(:eol, "{")
-      end
-
-      rule :r_sqbracket do
-        match("}")
-        match("}", :eol)
-      end
-
       rule :stmts_block do
-        match(:l_sqbracket, :stmts, :r_sqbracket) {
+        match(:l_curbracket, :stmts, :r_curbracket) {
           |_,stmts,_| stmts
         }
       end
@@ -466,11 +509,134 @@ class MagiikaParser
       end
 
 
+      # ✨ FUNCTIONS
+      # ------------------------------------------------------------------------
+
+      rule :param_list do
+        match(:type, ':', :name, ',', :params) {
+          |type,_,name,_,params| [[name, type, nil]].concat(params)
+        }
+        match(:type, ':', :name) {
+          |type,_,name| [name, type, nil]
+        }
+
+        match(':', :name) {
+          |_,name| [name, "magic", nil]
+        }
+        match(:name) {
+          |name| [name, "magic", nil]
+        }
+      end
+
+      rule :param_def_list do
+        match(:type, ':', :name, '=', :expr, ',', :params) {
+          |type,_,name,_,value,_,params| [[name, type, value]].concat(params)
+        }
+        match(:type, ':', :name, '=', :expr) {
+          |type,_,name,_,value| [name, type, value]
+        }
+
+        match(':', :name, '=', :expr) {
+          |_,name,_,value| [name, "magic", value]
+        }
+        match(:name, '=', :expr) {
+          |name,_,value| [name, "magic", value]
+        }
+      end
+
+      rule :params do
+        match(:param_list)
+        match(:param_def_list)
+      end
+
+      rule :params_block do
+        match(:l_parenthesis, :stmts, :r_parenthesis) {
+          |_,params,_| params
+        }
+      end
+
+      rule :func_definition do
+        match('fn', ':', :name, :stmts_block) {
+          |_,_,name,stmts|
+          FunctionDefinition.new(name, nil, "magic", stmts, scope_handler)
+        }
+        match('fn', ':', :name, '->', :type, :stmts_block) {
+          |_,_,name,_,type,stmts|
+          FunctionDefinition.new(name, nil, type, stmts, scope_handler)
+        }
+        match('fn', ':', :name, :parenthesis_block, :stmts_block) {
+          |_,_,name,_,stmts|
+          FunctionDefinition.new(name, nil, "magic", stmts, scope_handler)
+        }
+        match('fn', ':', :name, :parenthesis_block, '->', :type, :stmts_block) {
+          |_,_,name,_,_,type,stmts|
+          FunctionDefinition.new(name, nil, type, stmts, scope_handler)
+        }
+        match('fn', ':', :name, :params_block, :stmts_block) {
+          |_,_,name,_,params,_,stmts|
+          FunctionDefinition.new(name, params, "magic", stmts, scope_handler)
+        }
+        match('fn', ':', :name, :params_block, '->', :type, :stmts_block) {
+          |_,_,name,_,params,_,_,type,stmts|
+          FunctionDefinition.new(name, params, type, stmts, scope_handler)
+        }
+
+        match(':', :name, :stmts_block) {
+          |_,name,stmts|
+          FunctionDefinition.new(name, nil, "magic", stmts, scope_handler)
+        }
+        match(':', :name, '->', :type, :stmts_block) {
+          |_,name,_,type,stmts|
+          FunctionDefinition.new(name, nil, type, stmts, scope_handler)
+        }
+        match(':', :name, :parenthesis_block, :stmts_block) {
+          |_,name,_,stmts|
+          FunctionDefinition.new(name, nil, "magic", stmts, scope_handler)
+        }
+        match(':', :name, :parenthesis_block, '->', :type, :stmts_block) {
+          |_,name,_,_,type,stmts|
+          FunctionDefinition.new(name, nil, type, stmts, scope_handler)
+        }
+        match(':', :name, :params_block, :stmts_block) {
+          |_,name,params,stmts|
+          FunctionDefinition.new(name, params, "magic", stmts, scope_handler)
+        }
+        match(':', :name, :params_block, '->', :type, :stmts_block) {
+          |_,name,params,_,type,stmts|
+          FunctionDefinition.new(name, params, type, stmts, scope_handler)
+        }
+      end
+
+      rule :func_call_args do
+        match(:cond, ',', :func_call_args) {
+          |arg,_,args| [arg].concat(*args)
+        }
+        match(:cond) {
+          |arg| [arg]
+        }
+      end
+
+      rule :func_call_args_block do
+        match(:l_parenthesis, :func_call_args, :r_parenthesis) {
+          |_,args,_| args
+        }
+      end
+
+      rule :func_call do
+        match(:name, :parenthesis_block) {
+          |name,_| FunctionCall.new(name, nil, scope_handler)
+        }
+        match(:name, :func_call_args_block) {
+          |name,args| FunctionCall.new(name, args, scope_handler)
+        }
+      end
+
+
       # ✨ LIBRARY CALLS
       # ------------------------------------------------------------------------
 
       rule :syslib_call do
-        match("\$", :cond) {|_,obj| PrintNode.new(obj)}
+        match('$', :cond) {|_,obj| PrintNode.new(obj)}
       end
     end
   end
