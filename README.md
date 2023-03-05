@@ -1,4 +1,12 @@
+<div align="center">
+ <img width="50" src="./resources/magiika_icon.svg">
+</div>
+
 # Magiika ✨
+
+<div align="center">
+ <img src="./resources/magiika_banner.svg">
+</div>
 
 A magical interpreted programming language - powered by 
 Ruby, *magic and ⊹SPARKLES₊+*!

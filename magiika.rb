@@ -2,7 +2,8 @@
 
 require_relative './src/parsing/parser.rb'
 
-
+ANSI_BANNER_SIXELS_PATH = "./resources/magiika_sixels.ans"
+ANSI_BANNER_SIXELS      = File.open(ANSI_BANNER_SIXELS_PATH, 'rb') {|f| f.read}
 ANSI_RESET              = "\x1b[m"
 ANSI_UNDERLINE_ON       = "\x1b[4m"
 ANSI_UNDERLINE_OFF      = "\x1b[24m"
@@ -13,6 +14,7 @@ ANSI_RELAXED_STYLE      = "\x1b[38;2;52;111;140m"
 
 
 def _banner
+  $stdout << ANSI_BANNER_SIXELS
   puts ANSI_BOLD_ACCENT_STYLE + " -   ⊹ M a g i i k a ₊+  - " + ANSI_RESET + 
     "\n"
   puts ANSI_ACCENT_STYLE +      "  powered by ⊹sparkles₊+!  " + ANSI_RESET + 
