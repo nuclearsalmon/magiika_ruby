@@ -9,7 +9,7 @@
    id="svg5"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    sodipodi:docname="magiika_banner.svg"
-   inkscape:export-filename="magiika_banner.png"
+   inkscape:export-filename="magiika_banner5.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -28,17 +28,34 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="0.35355339"
-     inkscape:cx="732.56263"
-     inkscape:cy="429.92092"
+     inkscape:zoom="1"
+     inkscape:cx="510"
+     inkscape:cy="692"
      inkscape:window-width="1920"
      inkscape:window-height="1024"
      inkscape:window-x="0"
      inkscape:window-y="1112"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg5" />
+     inkscape:current-layer="g6146" />
   <defs
      id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient2937">
+      <stop
+         style="stop-color:#716d92;stop-opacity:1;"
+         offset="0"
+         id="stop2933" />
+      <stop
+         style="stop-color:#716d92;stop-opacity:0;"
+         offset="1"
+         id="stop2935" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect1743"
+       is_visible="true"
+       lpeversion="1" />
     <rect
        x="820"
        y="220"
@@ -492,6 +509,15 @@
        r="22.051685"
        gradientTransform="matrix(1,0,0,1.3195354,0,-61.742759)"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2937"
+       id="linearGradient2939"
+       x1="-170.65578"
+       y1="249.54227"
+       x2="-39.343689"
+       y2="91.360542"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <rect
      style="display:none;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:14.0901;stroke-dasharray:none;paint-order:markers stroke fill"
@@ -516,11 +542,11 @@
       <g
          id="g138402"
          inkscape:label="sectioning"
-         style="display:inline"
+         style="display:none"
          transform="matrix(1.2267695,0,0,1.2267695,-33.878905,-60.604578)"
          sodipodi:insensitive="true">
         <rect
-           style="display:none;fill:#79909e;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
+           style="display:inline;fill:#79909e;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
            id="rect138066"
            width="65.656044"
            height="65.656052"
@@ -529,7 +555,7 @@
            ry="7.4577847"
            sodipodi:insensitive="true" />
         <rect
-           style="display:none;fill:#819aa9;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
+           style="display:inline;fill:#819aa9;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
            id="rect138072"
            width="32.828022"
            height="32.828022"
@@ -538,7 +564,7 @@
            ry="7.1108208"
            sodipodi:insensitive="true" />
         <rect
-           style="display:none;fill:#869faf;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
+           style="display:inline;fill:#869faf;fill-opacity:1;stroke-width:0.194;stroke-dasharray:none"
            id="rect138074"
            width="16.414007"
            height="16.414011"
@@ -1587,7 +1613,7 @@
            inkscape:label="outer_guide"
            sodipodi:insensitive="true" />
         <rect
-           style="display:none;fill:#1a1a1a;stroke-width:0.264583"
+           style="display:inline;fill:#1a1a1a;stroke-width:0.264583"
            id="rect574"
            width="131.31209"
            height="158.18172"
@@ -1601,12 +1627,12 @@
          inkscape:groupmode="layer"
          id="layer2"
          inkscape:label="border"
-         style="display:inline"
+         style="display:inline;stroke:none;stroke-width:0;stroke-dasharray:none"
          transform="matrix(1.2267695,0,0,1.2267695,-33.878589,-60.604577)"
          sodipodi:insensitive="true">
         <rect
-           style="display:inline;fill:#39374a;fill-opacity:1;stroke:none;stroke-width:5.70604;stroke-dasharray:none;paint-order:markers stroke fill"
-           id="rect2249"
+           style="display:inline;fill:#39374a;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none;paint-order:markers stroke fill"
+           id="rect1818"
            width="131.31209"
            height="131.3121"
            x="-170.65604"
@@ -1615,6 +1641,20 @@
            transform="scale(-1,1)"
            inkscape:label="box"
            sodipodi:insensitive="true" />
+      </g>
+      <g
+         inkscape:groupmode="layer"
+         id="layer4"
+         inkscape:label="groovy fog"
+         transform="translate(-47.611025,5.6249998)"
+         style="display:inline">
+        <path
+           id="rect2249"
+           mask="none"
+           style="display:inline;fill:url(#linearGradient2939);fill-opacity:1;stroke:none;stroke-width:5.70611;stroke-dasharray:none;paint-order:markers stroke fill"
+           inkscape:label="box"
+           d="M -39.34386 167.53768 L -39.34386 212.08549 L -39.34386 212.51684 L -39.34386 216.37666 C -39.34386 225.45445 -46.652302 232.76248 -55.730094 232.76248 L -154.26991 232.76248 C -163.3477 232.76248 -170.65615 225.45445 -170.65615 216.37666 L -170.65615 212.51684 L -170.65615 212.08549 L -170.65573 193.65793 C -162.80018 186.71517 -151.47166 183.91986 -141.28814 186.41134 C -135.52644 187.82098 -130.26619 190.76806 -125.24311 193.92289 C -120.22003 197.07772 -115.32494 200.48821 -109.94031 202.97618 C -96.217424 209.31683 -79.614213 209.0475 -66.10397 202.26555 C -52.593727 195.4836 -42.458125 182.33034 -39.34386 167.53768 z "
+           transform="matrix(-1.2267695,0,0,1.2267695,13.732436,-66.229577)" />
       </g>
       <g
          inkscape:label="bottom fog"
@@ -2548,7 +2588,7 @@
          inkscape:groupmode="layer"
          id="layer7"
          inkscape:label="visible bottom fog"
-         style="display:inline"
+         style="display:none"
          transform="matrix(1.2267695,0,0,1.2267695,-33.878905,-60.604578)"
          sodipodi:insensitive="true">
         <rect
@@ -2605,7 +2645,8 @@
          id="layer3"
          inkscape:label="sparkles"
          transform="matrix(1.2267695,0,0,1.2267695,-33.878905,-60.604578)"
-         sodipodi:insensitive="true">
+         sodipodi:insensitive="true"
+         style="display:inline">
         <g
            id="g4336"
            inkscape:label="accent"
@@ -3648,7 +3689,7 @@
          inkscape:groupmode="layer"
          id="layer6"
          inkscape:label="visible top fog"
-         style="display:inline"
+         style="display:none"
          transform="matrix(1.2267695,0,0,1.2267695,-33.878905,-60.604578)"
          sodipodi:insensitive="true">
         <rect
@@ -3685,8 +3726,8 @@
        inkscape:label="headline"><tspan
          x="820"
          y="394.69604"
-         id="tspan5008"><tspan
+         id="tspan9443"><tspan
            style="font-weight:bold;font-family:serif;-inkscape-font-specification:'serif, Bold'"
-           id="tspan5006">Magiika</tspan></tspan></text>
+           id="tspan9441">Magiika</tspan></tspan></text>
   </g>
 </svg>

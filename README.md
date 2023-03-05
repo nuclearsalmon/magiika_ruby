@@ -16,6 +16,7 @@ safely.
 - `Ruby >= 3.0`: Magiika is parsed using Ruby.
 
 ## 📸 Screenshots
+
 ![Screenshot 1](./resources/screenshots/screenshot_1.png)
 
 ## 🚀 How to use
@@ -43,3 +44,9 @@ safely.
 ```bash
 ./test/test_all.rb
 ```
+
+---
+
+<div align="center">
+ <img width=64 src="./resources/magiika_icon.svg">
+</div>

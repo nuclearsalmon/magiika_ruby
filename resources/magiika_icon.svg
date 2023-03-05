@@ -31,15 +31,15 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.48947098"
-     inkscape:cx="84.785415"
-     inkscape:cy="633.33684"
+     inkscape:zoom="0.34610825"
+     inkscape:cx="179.13471"
+     inkscape:cy="231.14156"
      inkscape:window-width="1920"
-     inkscape:window-height="1024"
+     inkscape:window-height="1056"
      inkscape:window-x="0"
-     inkscape:window-y="1112"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer6" />
+     inkscape:current-layer="layer5" />
   <defs
      id="defs2">
     <linearGradient
@@ -698,6 +698,28 @@
        r="22.051685"
        gradientTransform="matrix(1,0,0,1.3195354,0,-61.742759)"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2937"
+       id="linearGradient2939"
+       x1="-170.65578"
+       y1="249.54227"
+       x2="-39.343689"
+       y2="91.360542"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-1.2267675,0,0,1.2266087,-21.174783,-60.616107)" />
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient2937">
+      <stop
+         style="stop-color:#716d92;stop-opacity:1;"
+         offset="0"
+         id="stop2933" />
+      <stop
+         style="stop-color:#716d92;stop-opacity:0;"
+         offset="1"
+         id="stop2935" />
+    </linearGradient>
   </defs>
   <g
      id="g6146"
@@ -1791,11 +1813,11 @@
        inkscape:groupmode="layer"
        id="layer2"
        inkscape:label="border"
-       style="display:inline"
+       style="display:inline;stroke:none;stroke-width:0;stroke-dasharray:none"
        transform="matrix(1.2267695,0,0,1.2267695,-31.24294,-60.653477)"
        sodipodi:insensitive="true">
       <rect
-         style="display:inline;fill:#39374a;fill-opacity:1;stroke:none;stroke-width:5.70604;stroke-dasharray:none;paint-order:markers stroke fill"
+         style="display:inline;fill:#39374a;fill-opacity:1;stroke:none;stroke-width:0;stroke-dasharray:none;paint-order:markers stroke fill"
          id="rect133740-9"
          width="131.31209"
          height="131.3121"
@@ -1805,6 +1827,17 @@
          transform="scale(-1,1)"
          inkscape:label="box"
          sodipodi:insensitive="true" />
+    </g>
+    <g
+       inkscape:groupmode="layer"
+       id="layer5"
+       inkscape:label="groovy fog">
+      <path
+         id="rect2249"
+         mask="none"
+         style="display:inline;fill:url(#linearGradient2939);fill-opacity:1;stroke:none;stroke-width:6.99961;stroke-dasharray:none;paint-order:markers stroke fill"
+         inkscape:label="box"
+         d="m 27.090983,144.88707 v 54.64273 0.5291 4.73449 c 0,11.1349 8.965768,20.09899 20.102107,20.09899 h 120.88545 c 11.13635,0 20.10211,-8.96409 20.10211,-20.09899 v -4.73449 -0.5291 l -5.1e-4,-22.60341 c -9.63693,-8.51604 -23.5344,-11.9448 -36.02721,-8.88873 -7.06826,1.72908 -13.52136,5.34399 -19.68352,9.21374 -6.16215,3.86974 -12.16728,8.05308 -18.77299,11.10484 -16.834776,7.7775 -37.203065,7.44713 -53.776995,-0.87166 -16.573923,-8.31879 -29.007959,-24.45271 -32.828442,-42.59751 z" />
     </g>
     <g
        inkscape:label="bottom fog"
@@ -2738,7 +2771,7 @@
        inkscape:groupmode="layer"
        id="layer7"
        inkscape:label="visible bottom fog"
-       style="display:inline"
+       style="display:none"
        transform="matrix(1.2267695,0,0,1.2267695,-21.175518,-60.604578)"
        sodipodi:insensitive="true">
       <rect
@@ -2795,7 +2828,8 @@
        id="layer3"
        inkscape:label="sparkles"
        transform="matrix(1.2267695,0,0,1.2267695,-21.175791,-60.604578)"
-       sodipodi:insensitive="true">
+       sodipodi:insensitive="true"
+       style="display:inline">
       <g
          id="g4336"
          inkscape:label="accent"
@@ -3838,7 +3872,7 @@
        inkscape:groupmode="layer"
        id="layer6"
        inkscape:label="visible top fog"
-       style="display:inline"
+       style="display:none"
        transform="matrix(1.2267695,0,0,1.2267695,-21.176155,-60.604578)"
        sodipodi:insensitive="true">
       <rect
