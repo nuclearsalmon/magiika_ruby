@@ -2,7 +2,7 @@
 
 require_relative './src/parsing/parser.rb'
 
-ANSI_BANNER_SIXELS_PATH = "./resources/magiika_sixels.ans"
+ANSI_BANNER_SIXELS_PATH = "./resources/magiika_banner.sixels.ans"
 ANSI_BANNER_SIXELS      = File.open(ANSI_BANNER_SIXELS_PATH, 'rb') {|f| f.read}
 ANSI_RESET              = "\x1b[m"
 ANSI_UNDERLINE_ON       = "\x1b[4m"
