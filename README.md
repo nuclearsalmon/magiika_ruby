@@ -15,6 +15,9 @@ safely.
 
 - `Ruby >= 3.0`: Magiika is parsed using Ruby.
 
+## 📸 Screenshots
+![Screenshot 1](./resources/screenshots/screenshot_1.png)
+
 ## 🚀 How to use
 
 > Note: Grant execute permission to the file first.
