@@ -8,7 +8,7 @@ ANSI_RESET              = "\x1b[m"
 ANSI_UNDERLINE_ON       = "\x1b[4m"
 ANSI_UNDERLINE_OFF      = "\x1b[24m"
 ANSI_BOLD_ACCENT_STYLE  = "\x1b[38;2;253;134;42;4m"
-ANSI_ACCENT_STYLE       = "\x1b[38;2;253;102;5;3m"
+ANSI_ACCENT_STYLE       = "\x1b[38;2;253;134;42;3m"
 ANSI_WARNING_STYLE      = "\x1b[38;2;235;59;47m"
 ANSI_RELAXED_STYLE      = "\x1b[38;2;150;178;195m"
 
