@@ -46,6 +46,8 @@ class Rule
     return nil if match_result.nil?
     loop do
       result = try_matches(@lrmatches, match_result)
+
+      @logger.debug("")
       return match_result if result.nil?
       match_result = result
     end
