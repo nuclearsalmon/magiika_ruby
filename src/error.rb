@@ -73,3 +73,19 @@ class MagiikaUndefinedVariableError < MagiikaError
     super(msg)
   end
 end
+
+
+class MagiikaBadNrOfArgsError < MagiikaError
+  def initialize(fnsig, badnrofargs)
+    msg = "invalid number of arguments for `#{fnsig}': #{badnrofargs}."
+    super(msg)
+  end
+end
+
+
+class MagiikaBadArgNameError < MagiikaError
+  def initialize(fnsig, badargname)
+    msg = "invalid argument name for `#{fnsig}': #{badargname}."
+    super(msg)
+  end
+end

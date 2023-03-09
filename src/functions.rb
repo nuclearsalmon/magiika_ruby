@@ -1,15 +1,19 @@
 #!/usr/bin/env ruby
 
 module FunctionUtils
-  def get_param_key
-    if @params == nil || @params.length == 0 then
-      return ""
-    end
+  def get_fn_key(src)
+    return "" if @src == nil || @src.length == 0
 
     key = ""
-    @params.each {|param| key += (param[1] + " ")}  # type
+    @src.each {|e| key += (e[1] + " ")}  # [1] <- type
     return key[0..-2]
   end
+  module_function :get_fn_key
+
+  def get_fn_sig(name, params, ret_type)
+    return "#{name}(#{params}) -> #{ret_type}"
+  end
+  module_function :get_fn_sig
 end
 
 
@@ -22,8 +26,8 @@ class FunctionDefinition < BaseNode
   end
 
   def eval()
-    definition = [@params, @ret_type, @stmts]
-    @scope_handler.add_func(@name, get_param_key(), definition)
+    fn_def = [@params, @ret_type, @stmts]
+    @scope_handler.add_func(@name, get_fn_key(fn_def), fn_def)
   end
 end
 
@@ -37,19 +41,7 @@ class FunctionCall < BaseNode
   end
 
   def unwrap
-    definition = @scope_handler.get_func(name, get_param_key)
-    stmts = definition[2]
-
-    result = nil
-    @scope_handler.temp_scope {
-      result = stmts.eval
-    }
-
-    if result == nil
-      return EmptyNode.get_default
-    else
-      return result
-    end
+    return @scope_handler.temp_fn_call_scope(@name, @args)
   end
 
   def eval
