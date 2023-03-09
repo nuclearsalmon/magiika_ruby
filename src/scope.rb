@@ -109,7 +109,7 @@ class ScopeHandler
     params, ret_type, stmts = *fn_def
     fn_sig = FunctionUtils.get_fn_sig(name, params, ret_type)
 
-    params_map = Hash[*params.collect{|v| [v[0], [v[1..-1]]]}.flatten]
+    params_map = Hash[params.collect{|v| [v[0], v[1..-1]]}]
     param_values = Hash.new
     args.each_with_index {
       |arg, idx|
@@ -118,7 +118,7 @@ class ScopeHandler
       # find arg name
       if arg_name == nil
         raise MagiikaBadNrOfArgsError.new(fnsig, -1) if params.length < idx
-        arg_name = params[idx][1]
+        arg_name = params[idx][0]
         raise MagiikaBadNrOfArgsError.new(fnsig, -1) if arg_name == nil
       end
       
@@ -144,7 +144,7 @@ class ScopeHandler
     # assign defaults
     params.each {
       |param|
-      param_type, param_name, param_def_val = *param
+      param_name, param_type, param_def_val = *param
 
       next if param_values[param_name] != nil
       raise MagiikaBadNrOfArgsError.new(fn_sig, -1) if param_def_val == nil
