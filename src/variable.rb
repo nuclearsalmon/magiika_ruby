@@ -77,6 +77,7 @@ class RetrieveVariable < BaseNode
   end
 
   def eval
+    p @scope_handler.scopes
     return unwrap.eval
   end
 

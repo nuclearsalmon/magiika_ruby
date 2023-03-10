@@ -78,7 +78,7 @@ FUNCTIONS_PROC = Proc.new do
     }
     match(:func_ident, :name, :params_block, :ret_ident, :stmts_block) {
       |_,name,params,ret_type,stmts|
-      FunctionDefinition.new(name, params, type, stmts, scope_handler)
+      FunctionDefinition.new(name, params, ret_type, stmts, scope_handler)
     }
   end
 

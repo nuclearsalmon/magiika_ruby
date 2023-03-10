@@ -25,6 +25,7 @@ TOKENS_PROC = Proc.new do
   token(/(==|!=|>=|<=)/)        {|t| t}
   token(/(:=)/)                 {|t| t}
   token(/(\+\+|--|\/\/|<<|>>)/) {|t| t}
+  token(/(->)/)                 {|t| t}
 
   # single-character operators
   token(/(=|\+|-|\*|\/|%|&|!|<|>)/) {|t| t}

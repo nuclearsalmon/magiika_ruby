@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require_relative './functions.rb'
+require_relative './functions.rb'  # FunctionUtils
 
 
 class ScopeHandler
-  include FunctionUtils
+  attr_reader :scopes
 
   def initialize
     @scopes = [Hash.new]
@@ -85,6 +85,7 @@ class ScopeHandler
   end
 
   def add_func(name, param_key, definition)
+    p @scopes
     # register new name
     if @scopes[-1][name] == nil
       @scopes[-1][name] = Hash.new

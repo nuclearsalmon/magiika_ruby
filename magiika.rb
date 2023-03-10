@@ -78,6 +78,7 @@ class Magiika
         "   `l' : toggle debug logging\n" +
         "   `e' : toggle pretty errors\n" +
         "   `a' : toggle error rescuing\n" +
+        "   `r' : toggle raw object printing\n" +
         "   `h' : this help menu\n")
     else
       _warn("unknown command. try `##h'.\n")

@@ -34,6 +34,12 @@ PROGRAM_PROC = Proc.new do
 
     match(:cond)
   end
+  
+  rule :stmts_block do
+    match(:l_curbracket, :stmts, :r_curbracket) {
+      |_,stmts,_| stmts
+    }
+  end
 
   rule :syslib_call do
     match('$', :cond) {|_,obj| PrintNode.new(obj)}
@@ -47,12 +53,6 @@ PROGRAM_PROC = Proc.new do
   rule :else_keyword do
     match(:eol, "else")
     match("else")
-  end
-
-  rule :stmts_block do
-    match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| stmts
-    }
   end
 
   rule :if_stmt do

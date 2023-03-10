@@ -24,10 +24,10 @@ class BaseNode
   end
 
   # unwrap down to class if possible
-  def unwrap_to(cls)
+  def unwrap_to_class(cls)
     prev_value = self
     value = unwrap
-    while value.class != cls or value != prev_value do
+    while value != prev_value and value.class != cls do
       prev_value = value
       value = value.unwrap
     end
@@ -39,6 +39,26 @@ class BaseNode
     prev_value = self
     value = unwrap
     while value != prev_value do
+      prev_value = value
+      value = value.unwrap
+    end
+    return value
+  end
+
+  def unwrap_classes(classes)
+    prev_value = self
+    value = unwrap
+    while value != prev_value and !classes.include?(value.class) do
+      prev_value = value
+      value = value.unwrap
+    end
+    return value
+  end
+
+  def unwrap_except_classes(classes)
+    prev_value = self
+    value = unwrap
+    while value != prev_value and classes.include?(value.class) do
       prev_value = value
       value = value.unwrap
     end
@@ -124,20 +144,8 @@ class ContainerTypeNode < TypeNode
     @value = value
   end
 
-  def ==(other)
-    if self.class != other.class then
-      return false
-    elsif other.respond_to?(:value) then
-      val = @value.respond_to?(:unwrap) ? @value.unwrap : @value
-      obj = other.value.respond_to?(:unwrap) ? other.value.unwrap : other.value
-      return val == obj
-    end
-
-    return false
-  end
-
-  def !=(other)
-    return !(self == other)
+  def method_missing(method_name, *args, &block)
+    @value.public_send(method_name, *args, &block)
   end
 end
 

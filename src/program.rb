@@ -82,14 +82,11 @@ class BinaryExpressionNode < BaseNode
   end
 
   def unwrap
-    l = @l.unwrap
-    r = @r.unwrap
-
-    if l.class.method_defined?(@op) then
-      return l.public_send(@op, r)
+    if @l.class.method_defined?(@op) then
+      return @l.public_send(@op, @r)
     else
       raise MagiikaUnsupportedOperationError.new(
-        "`#{l.type}' does not support `#{@op}'.")
+        "`#{@l.type}' does not support `#{@op}'.")
     end
   end
 
