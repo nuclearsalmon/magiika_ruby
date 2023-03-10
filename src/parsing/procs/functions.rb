@@ -60,18 +60,18 @@ FUNCTIONS_PROC = Proc.new do
 
   rule :ret_ident do
     match('->', :type) {|_,type| type}
-    match('') {'magic'}
   end
 
   rule :func_definition do
     match(:func_ident, :name, :stmts_block) {
       |_,name,params,stmts|
-      FunctionDefinition.new(name, [], stmts, scope_handler)
+      FunctionDefinition.new(name, [], "magic", stmts, scope_handler)
     }
     match(:func_ident, :name, :ret_ident, :stmts_block) {
       |_,name,ret_type,stmts|
       FunctionDefinition.new(name, [], ret_type, stmts, scope_handler)
     }
+
     match(:func_ident, :name, :params_block, :stmts_block) {
       |_,name,params,stmts|
       FunctionDefinition.new(name, params, "magic", stmts, scope_handler)
