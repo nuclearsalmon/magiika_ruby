@@ -210,8 +210,11 @@ class IntNode < ContainerTypeNode
   end
 
   def !=(other)
-    obj = other.respond_to?(:value) ? other.value : other
-    return @value.public_send('!=', obj)
+    return !(self == other)
+  end
+
+  def ===(other)
+    return self == other
   end
 
   def >(other)
@@ -316,8 +319,11 @@ class FltNode < ContainerTypeNode
   end
 
   def !=(other)
-    obj = other.respond_to?(:value) ? other.value : other
-    return @value.public_send('!=', obj)
+    return !(self == other)
+  end
+
+  def ===(other)
+    return self == other
   end
 
   def >(other)
@@ -416,6 +422,19 @@ class BoolNode < ContainerTypeNode
   def to_bytes
     return [@value ? 0x0 : 0x1]
   end
+
+  def ==(other)
+    obj = other.respond_to?(:bool_eval?) ? other.bool_eval? : other
+    return @value.public_send('==', obj)
+  end
+
+  def !=(other)
+    return !(self == other)
+  end
+
+  def ===(other)
+    return self == other
+  end
 end
 
 
@@ -440,7 +459,7 @@ class StrNode < ContainerTypeNode
   end
 
   def output
-    return "\"" + @value.to_s + "\""
+    return @value
   end
 
   def self.type

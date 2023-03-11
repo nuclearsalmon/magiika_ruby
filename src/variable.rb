@@ -15,12 +15,6 @@ class DeclareVariable < BaseNode
       raise MagiikaUnsupportedOperationError.new(
         "using `#{@name}' as a variable name.")
     end
-
-    if @type != MagicNode.type and
-        (@object != nil and @type != @object.unwrap.type)
-      raise MagiikaError.new("requested container type `#{@type}' " + 
-        "does not match data type `#{@object.type}'")
-    end
   end
 
   def eval
@@ -32,6 +26,9 @@ class DeclareVariable < BaseNode
       
       if @type == MagicNode.type
         obj = MagicNode.new(obj)  # wrap in magic
+      elsif (@object != nil and @type != @object.eval.unwrap_all.type)
+        raise MagiikaError.new("requested container type `#{@type}' " + 
+          "does not match data type `#{@object.type}'")
       end
     end
     

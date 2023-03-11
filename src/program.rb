@@ -83,8 +83,7 @@ end
 
 class PrintNode < ContainerTypeNode
   def eval
-    value = @value.unwrap_all
-    result = value.eval
+    result = @value.eval
     if result.respond_to?(:output)
       puts result.output
     elsif result != nil

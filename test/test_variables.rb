@@ -15,19 +15,19 @@ class TestDeclaration < Test::Unit::TestCase
     magiika = Magiika.new
 
     r = magiika.parse(":i=1;i")
-    assert_equal(IntNode.new(1), r.value)
+    assert_equal(IntNode.new(1), r)
 
     r = magiika.parse(":f=1.7;f")
-    assert_equal(FltNode.new(1.7), r.value)
+    assert_equal(FltNode.new(1.7), r)
 
     r = magiika.parse(":b=true;b")
-    assert_equal(BoolNode.new(true), r.value)
+    assert_equal(BoolNode.new(true), r.unwrap)
 
     r = magiika.parse(":c='!';c")
-    assert_equal(StrNode.new("!"), r.value)
+    assert_equal(StrNode.new("!"), r.unwrap)
 
     r = magiika.parse(":s=\"!!!\";s")
-    assert_equal(StrNode.new("!!!"), r.value)
+    assert_equal(StrNode.new("!!!"), r.unwrap)
   end
 
 
@@ -35,20 +35,20 @@ class TestDeclaration < Test::Unit::TestCase
     magiika = Magiika.new
 
     r = magiika.parse(":e = 100; e")
-    assert_equal(IntNode.new(100), r.value)
+    assert_equal(IntNode.new(100), r)
 
     r = magiika.parse("e := 777; e")
-    assert_equal(IntNode.new(777), r.value)
+    assert_equal(IntNode.new(777), r)
   end
 
   def test_builtin_magic_redeclare_different_type
     magiika = Magiika.new
 
     r = magiika.parse(":e = 08.9002; e")
-    assert_equal(FltNode.new(8.9002), r.value)
+    assert_equal(FltNode.new(8.9002), r)
 
     r = magiika.parse("e := true; e")
-    assert_equal(BoolNode.new(true), r.value)
+    assert_equal(BoolNode.new(true), r)
   end
 end
 
@@ -57,35 +57,35 @@ class TestAssignment
     magiika = Magiika.new
 
     r = magiika.parse(":i=1;i")
-    assert_equal(IntNode.new(1), r.value)
+    assert_equal(IntNode.new(1), r)
 
     r = magiika.parse(":f=1.7;f")
-    assert_equal(FltNode.new(1.7), r.value)
+    assert_equal(FltNode.new(1.7), r)
 
     r = magiika.parse(":b=true;b")
-    assert_equal(BoolNode.new(true), r.value)
+    assert_equal(BoolNode.new(true), r)
 
     r = magiika.parse(":c='!';c")
-    assert_equal(StrNode.new("!"), r.value)
+    assert_equal(StrNode.new("!"), r)
 
     r = magiika.parse(":s=\"!!!\";s")
-    assert_equal(StrNode.new("!!!"), r.value)
+    assert_equal(StrNode.new("!!!"), r)
 
     # ---
 
     r = magiika.parse("i=2;i")
-    assert_equal(IntNode.new(2), r.value)
+    assert_equal(IntNode.new(2), r)
 
     r = magiika.parse("f=8.7;f")
-    assert_equal(FltNode.new(8.7), r.value)
+    assert_equal(FltNode.new(8.7), r)
 
     r = magiika.parse("b=false;b")
-    assert_equal(BoolNode.new(false), r.value)
+    assert_equal(BoolNode.new(false), r)
 
     r = magiika.parse("c='a';c")
-    assert_equal(ChrNode.new("a"), r.value)
+    assert_equal(ChrNode.new("a"), r)
 
     r = magiika.parse("s=\"abc\";s")
-    assert_equal(StrNode.new("abc"), r.value)
+    assert_equal(StrNode.new("abc"), r)
   end
 end

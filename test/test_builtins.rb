@@ -58,15 +58,15 @@ end
 class TestBoolNode < Test::Unit::TestCase
   def test_empty_decl
     r = parse_new("bool: v1; v1")
-    assert_equal(false, r.unwrap.value)
+    assert_equal(BoolNode.new(false), r)
   end
 
   def test_bool_decl
     r = parse_new("bool: v_t = true; v_t")
-    assert_equal(true, r.unwrap.value)
+    assert_equal(BoolNode.new(true), r)
 
     r = parse_new("bool: v_f = false; v_f")
-    assert_equal(false, r.unwrap.value)
+    assert_equal(BoolNode.new(false), r)
   end
 end
 
