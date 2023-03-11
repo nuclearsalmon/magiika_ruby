@@ -158,7 +158,7 @@ class ScopeHandler
         |param_name, param_val|
         add_var(param_name, param_val)
       }
-      result = stmts.eval
+      result = stmts.quiet_eval
     }
 
     # typecheck return value and ensure it's a node

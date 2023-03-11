@@ -18,6 +18,11 @@ class StmtsNode < BaseNode
     end
     return out
   end
+
+  def quiet_eval
+    @stmt.eval if @stmt != :eol
+    @stmts.eval if @stmts.class == StmtsNode
+  end
 end
 
 
@@ -46,18 +51,14 @@ class UnaryExpressionNode < BaseNode
   end
 
   def eval
-    obj = @obj.unwrap_all
+    obj = @obj.eval
 
     if obj.class.method_defined?(@op)
-      return obj.public_send(@op).eval
+      return obj.public_send(@op)
     else
       raise MagiikaUnsupportedOperationError.new(
         "`#{obj.type}' does not support `#{@op}'.")
     end
-  end
-
-  def output
-    return eval
   end
 end
 
@@ -67,25 +68,15 @@ class BinaryExpressionNode < BaseNode
     @l, @op, @r = l, op, r
   end
 
-  def eval_base
-    if @l.class.method_defined?(@op)
-      return @l.public_send(@op, @r)
+  def eval
+    l = @l.eval
+    r = @r.eval
+    if l.class.method_defined?(@op)
+      return l.public_send(@op, r)
     else
       raise MagiikaUnsupportedOperationError.new(
         "`#{@l.type}' does not support `#{@op}'.")
     end
-  end
-
-  def eval
-    return eval_base.eval
-  end
-
-  def bool_eval?
-    return eval_base.bool_eval?  # fixme optimize
-  end
-
-  def output
-    return eval
   end
 end
 
