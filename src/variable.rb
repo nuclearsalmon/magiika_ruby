@@ -11,13 +11,13 @@ class DeclareVariable < BaseNode
     @type, @name, @object = type, name, object
     @scope_handler = scope_handler
 
-    if BUILT_IN_TYPES.keys.include?(@name) then
+    if BUILT_IN_TYPES.keys.include?(@name)
       raise MagiikaUnsupportedOperationError.new(
         "using `#{@name}' as a variable name.")
     end
 
     if @type != MagicNode.type and
-        (@object != nil and @type != @object.unwrap.type) then
+        (@object != nil and @type != @object.unwrap.type)
       raise MagiikaError.new("requested container type `#{@type}' " + 
         "does not match data type `#{@object.type}'")
     end
@@ -25,12 +25,12 @@ class DeclareVariable < BaseNode
 
   def eval
     # get default object
-    if @object == nil then
+    if @object == nil
       obj = type_to_node_class(@type).get_default
     else
       obj = @object.eval
       
-      if @type == MagicNode.type then
+      if @type == MagicNode.type
         obj = MagicNode.new(obj)  # wrap in magic
       end
     end
@@ -55,11 +55,11 @@ class AssignVariable < BaseNode
     raise MagiikaError.new("undefined variable `#{@name}'.") if var == nil
 
     obj = @object.eval #obj = @object.unwrap
-    if var.type == MagicNode.type then
+    if var.type == MagicNode.type
       obj = MagicNode.new(obj)  # wrap in magic
       @scope_handler.set_var(@name, obj)
     elsif var.type == obj.type || 
-      (var.type == MagicNode.type && (var.magic_type == obj.type)) then
+      (var.type == MagicNode.type && (var.magic_type == obj.type))
       @scope_handler.set_var(@name, obj)
     else
       raise MagiikaNoSuchCastError.new(obj, var)
@@ -77,19 +77,10 @@ class RetrieveVariable < BaseNode
   end
 
   def eval
-    p @scope_handler.scopes
-    return unwrap.eval
+    return @scope_handler.get_var(@name)
   end
 
   def output
-    return unwrap
-  end
-
-  def bool_eval?
-    return unwrap.bool_eval?
-  end
-
-  def unwrap
     return @scope_handler.get_var(@name)
   end
 end
@@ -102,15 +93,15 @@ class RedeclareVariable < BaseNode
     @name, @object = name, object
     @scope_handler = scope_handler
 
-    if BUILT_IN_TYPES.keys.include?(@name) then
+    if BUILT_IN_TYPES.keys.include?(@name)
       raise MagiikaUnsupportedOperationError.new(
         "using `#{@name}' as a variable name.")
     end
   end
 
-  def unwrap
+  def eval_base
     # get default object
-    if @object == nil then
+    if @object == nil
       raise MagiikaUnsupportedOperationError.new(
         "redeclaration to nil.")
     else
@@ -123,14 +114,14 @@ class RedeclareVariable < BaseNode
   end
 
   def output
-    return unwrap.output
+    return eval_base.output
   end
 
   def bool_eval?
-    return unwrap.bool_eval?
+    return eval_base.bool_eval?
   end
 
   def eval
-    return unwrap.eval
+    return eval_base.eval
   end
 end

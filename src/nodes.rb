@@ -178,7 +178,7 @@ class IntNode < ContainerTypeNode
   include BitwiseOperators
 
   def initialize(value)
-    if value.class != Integer then
+    if value.class != Integer
       raise MagiikaMismatchedTypeError.new(value, self.type)
     end
     super(value)
@@ -261,7 +261,7 @@ class IntNode < ContainerTypeNode
   def int_div(other)
     verify_classes(other, [FltNode, ])
 
-    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
       raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
     end
     
@@ -284,7 +284,7 @@ class FltNode < ContainerTypeNode
   include BitwiseOperators
 
   def initialize(value)
-    if value.class != Integer && value.class != Float then
+    if value.class != Integer && value.class != Float
       raise MagiikaMismatchedTypeError.new(value, self.type)
     end
     super(value)
@@ -371,7 +371,7 @@ class FltNode < ContainerTypeNode
   def int_div(other)
     verify_classes(other, [IntNode, ])
 
-    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+    if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
       raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
     end
     
@@ -391,7 +391,7 @@ class BoolNode < ContainerTypeNode
   include BitwiseOperators
 
   def initialize(value)
-    if value.class != TrueClass and value.class != FalseClass then
+    if value.class != TrueClass and value.class != FalseClass
       raise MagiikaMismatchedTypeError.new(value, self.type)
     end
     super(value)
@@ -425,7 +425,7 @@ class StrNode < ContainerTypeNode
   include BitwiseOperators
 
   def initialize(value)
-    if value.class != String then
+    if value.class != String
       raise MagiikaMismatchedTypeError.new(value, self.type)
     end
     super(value)
@@ -465,9 +465,9 @@ end
 
 class MagicNode < ContainerTypeNode
   def initialize(value)
-    if !(value.class < TypeNode) then
+    if !(value.class < TypeNode)
       raise MagiikaError.new("a MagicNode must be instansiated with a TypeNode.")
-    elsif value.class <= MagicNode then
+    elsif value.class <= MagicNode
       raise MagiikaError.new("a MagicNode cannot contain another MagicNode.")
     end
     super(value)

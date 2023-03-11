@@ -16,7 +16,7 @@ class ScopeHandler
 
     while (i >= 0)
       target = @scopes[i][name]
-      if target == nil then
+      if target == nil
         i -= 1
         next  # skip
       end
@@ -85,7 +85,6 @@ class ScopeHandler
   end
 
   def add_func(name, param_key, definition)
-    p @scopes
     # register new name
     if @scopes[-1][name] == nil
       @scopes[-1][name] = Hash.new

@@ -25,7 +25,7 @@ class FunctionDefinition < BaseNode
     @scope_handler = scope_handler
   end
 
-  def eval()
+  def eval
     fn_def = [@params, @ret_type, @stmts]
     @scope_handler.add_func(@name, get_fn_key(fn_def), fn_def)
   end
@@ -40,15 +40,11 @@ class FunctionCall < BaseNode
     @scope_handler = scope_handler
   end
 
-  def unwrap
-    return @scope_handler.temp_fn_call_scope(@name, @args)
-  end
-
   def eval
-    return unwrap.eval
+    return @scope_handler.temp_fn_call_scope(@name, @args).eval
   end
 
   def bool_eval?
-    return unwrap.bool_eval?
+    return @scope_handler.temp_fn_call_scope(@name, @args).bool_eval?
   end
 end

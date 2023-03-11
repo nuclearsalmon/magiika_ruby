@@ -81,7 +81,7 @@ class Rule
           nt = @parser.expect(token)
           if nt
             result << nt
-            if @lrmatches.include?(match.pattern) then
+            if @lrmatches.include?(match.pattern)
               pattern = [@name]+match.pattern
             else
               pattern = match.pattern

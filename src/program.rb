@@ -10,19 +10,13 @@ class StmtsNode < BaseNode
     if @stmt == :eol
       out = nil
     else 
-      if @stmt.class.method_defined?(:output)
-        out = @stmt.output
-      else
-        @stmt.eval
-        out = nil
-      end
+      out = @stmt.eval
     end
 
     if @stmts.class == StmtsNode 
-       @stmts.eval 
-    else
-      return out
+      @stmts.eval
     end
+    return out
   end
 end
 
@@ -32,20 +26,16 @@ class BooleanInverterNode < BaseNode
     @value = value
   end
 
-  def unwrap
-    return BoolNode.new(!(@value.bool_eval?))
-  end
-
-  def output
-    return eval
-  end
-
   def eval
-    return unwrap.eval
+    return BoolNode.new(!(@value.bool_eval?)).eval
   end
 
   def bool_eval?
-    return eval
+    return BoolNode.new(!(@value.bool_eval?)).bool_eval?
+  end
+
+  def output
+    return eval.to_s
   end
 end
 
@@ -55,19 +45,15 @@ class UnaryExpressionNode < BaseNode
     @op, @obj = op, obj
   end
 
-  def unwrap
+  def eval
     obj = @obj.unwrap_all
 
-    if obj.class.method_defined?(@op) then
-      return obj.public_send(@op)
+    if obj.class.method_defined?(@op)
+      return obj.public_send(@op).eval
     else
       raise MagiikaUnsupportedOperationError.new(
         "`#{obj.type}' does not support `#{@op}'.")
     end
-  end
-
-  def eval
-    return unwrap.eval
   end
 
   def output
@@ -81,8 +67,8 @@ class BinaryExpressionNode < BaseNode
     @l, @op, @r = l, op, r
   end
 
-  def unwrap
-    if @l.class.method_defined?(@op) then
+  def eval_base
+    if @l.class.method_defined?(@op)
       return @l.public_send(@op, @r)
     else
       raise MagiikaUnsupportedOperationError.new(
@@ -91,11 +77,11 @@ class BinaryExpressionNode < BaseNode
   end
 
   def eval
-    return unwrap.eval
+    return eval_base.eval
   end
 
   def bool_eval?
-    return unwrap.bool_eval?  # fixme optimize
+    return eval_base.bool_eval?  # fixme optimize
   end
 
   def output
@@ -107,10 +93,11 @@ end
 class PrintNode < ContainerTypeNode
   def eval
     value = @value.unwrap_all
-    if value.respond_to?(:value) then
-      puts value.value
-    elsif value.respond_to?(:output) then
-      puts value.output
+    result = value.eval
+    if result.respond_to?(:output)
+      puts result.output
+    elsif result != nil
+      puts result
     else
       puts
     end
@@ -125,7 +112,7 @@ class IfNode < BaseNode
   end
 
   def eval
-    if @cond.bool_eval? then
+    if @cond.bool_eval?
       result = nil
       @scope_handler.temp_scope {
         result = @stmt.eval

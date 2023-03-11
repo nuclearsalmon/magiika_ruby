@@ -41,6 +41,7 @@ class Magiika
     @pretty_error = true
     @error_rescueing = true
     @raw_print = false
+    @show_empty = false
   end
 
   def logger
@@ -54,7 +55,7 @@ class Magiika
   def _handle_special_commands(input)
     case input[2]
     when "l"
-      if @parser.logger.level == Logger::DEBUG then
+      if @parser.logger.level == Logger::DEBUG
         @parser.logger.level = Logger::WARN
       else
         @parser.logger.level = Logger::DEBUG
@@ -70,6 +71,9 @@ class Magiika
     when "r"
       @raw_print = !@raw_print
       _notify("raw object printing " + _cond_to_tg(@raw_print) + "\n")
+    when "s"
+      @show_empty = !@show_empty
+      _notify("show empty " + _cond_to_tg(@show_empty) + "\n")
     when "\n"
       _warn("unspecified command. try `##h'.")
     when "h"
@@ -79,6 +83,7 @@ class Magiika
         "   `e' : toggle pretty errors\n" +
         "   `a' : toggle error rescuing\n" +
         "   `r' : toggle raw object printing\n" +
+        "   `s' : toggle show empty\n" +
         "   `h' : this help menu\n")
     else
       _warn("unknown command. try `##h'.\n")
@@ -90,7 +95,7 @@ class Magiika
     while true
       print '✨ '
       input = gets
-      if input[0,2] == '##' then
+      if input[0,2] == '##'
         _handle_special_commands(input)
       else
         begin
@@ -99,7 +104,7 @@ class Magiika
           raise error if !@error_rescueing
           
           err_msg = error.to_s.strip + "\n"
-          if !@pretty_error then
+          if !@pretty_error
             err_msg += "\n   " + error.backtrace.join("\n   ")
           end
           _warn(err_msg.strip)
@@ -107,15 +112,21 @@ class Magiika
           result = nil
         end
 
-        if result == nil then
-          puts
+        if @raw_print
+          p result
+          puts ''
         else
-          if !@raw_print and result.class.method_defined?("output") then
+          if result == nil
+            puts ''
+          elsif result.class.method_defined?(:output) &&
+            (result.class != EmptyNode || 
+              (result.class == EmptyNode && @show_empty))
             result = result.output
+            puts "⭐ #{result}\n\n"
+          else
+            puts ''
           end
-          puts "⭐ #{result}\n\n"
         end
-
       end
     end
   rescue Interrupt
@@ -124,8 +135,8 @@ class Magiika
   end
 end
 
-if __FILE__ == $0 then
-  if ARGV.length == 0 then
+if __FILE__ == $0
+  if ARGV.length == 0
     magiika = Magiika.new
     magiika.interactive
   else

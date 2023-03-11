@@ -4,7 +4,7 @@ require_relative './utils.rb'
 
 module OperatorUtils
   def passthrough_value(op, obj)
-    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode) then
+    if !(obj.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
       raise MagiikaMismatchedTypeError.new(obj, self.class)
     end
     
@@ -96,7 +96,7 @@ module BitwiseOperators
   end
 
   def bitwise_nor(other=nil)
-    if other == nil then
+    if other == nil
       self_bytes = self.to_bytes
 
       return self_bytes.map{|x| unsign([~x])}

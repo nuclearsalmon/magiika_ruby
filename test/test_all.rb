@@ -6,7 +6,7 @@ require_relative './testing_utils.rb'
 Dir[File.join(File.dirname(__FILE__), "test_*.rb")].each { 
   |file|
 
-  if file != __FILE__ then
+  if file != __FILE__
     puts "requiring `#{file}'"
     require file
   end
