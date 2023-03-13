@@ -5,6 +5,10 @@ require_relative './operators.rb'
 
 
 class BaseNode
+  def initialize
+    freeze
+  end
+
   # evaluate
   def eval
     raise Error::NotImplemented.new
@@ -63,6 +67,10 @@ end
 
 class TypeNode < BaseNode
   include BooleanOperators
+
+  def initialize()
+    super()
+  end
 
   # create an instance where default values are used
   # (if values are applicable to the type, otherwise it will
@@ -136,12 +144,15 @@ class ContainerTypeNode < TypeNode
 
   def initialize(value)
     @value = value
+    super()
   end
 
   def method_missing(method_name, *args, &block)
     @value.public_send(method_name, *args, &block)
   end
 end
+
+
 class EmptyNode < TypeNode
   include Singleton
 
