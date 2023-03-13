@@ -117,17 +117,17 @@ class Magiika
         end
 
         if @raw_print
-          print "☄️  " + ANSI_WARNING_STYLE + result.to_s + "\n\n"
+          print "☄️  " + ANSI_WARNING_STYLE + result.to_s + ANSI_RESET + "\n\n"
         else
           if result == nil
-            print ''
+            print "\n"
           elsif result.class.method_defined?(:output) &&
             (result.class != EmptyNode || 
               (result.class == EmptyNode && @show_empty))
             result = result.output
             print "⭐ #{result}\n\n"
           else
-            print ''
+            print "\n"
           end
         end
       end

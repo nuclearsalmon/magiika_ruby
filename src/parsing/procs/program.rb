@@ -18,7 +18,7 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :stmt do
-    match(:eol)                 {nil}
+    match(:eol)                 {StmtsNode.new(nil, nil)}
     match(:syslib_call)
 
     match(:if_stmt)

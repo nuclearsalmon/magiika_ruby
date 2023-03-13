@@ -158,13 +158,14 @@ class ScopeHandler
         |param_name, param_val|
         add_var(param_name, param_val)
       }
-      result = stmts.quiet_eval
+      result = stmts.eval
     }
+
+    p result
 
     # typecheck return value and ensure it's a node
     result = EmptyNode.get_default if result == nil
-    if !(ret_type == "magic" && result.type == "empty") && 
-      ret_type != result.type
+    if !(ret_type == "magic" || ret_type == result.type)
       raise Error::MismatchedType.new(result, ret_type)
     end
     return result

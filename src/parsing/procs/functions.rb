@@ -6,19 +6,20 @@ FUNCTIONS_PROC = Proc.new do
   |scope_handler|
 
   rule :fn_stmts do
-    match(:fn_stmt, :eol, :fn_stmts)  {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
-    match(:eol, :fn_stmts)            {|_,stmts|      StmtsNode.new(nil, stmts)}
-    match(:fn_stmt, :eol)             {|stmt,_|       StmtsNode.new(stmt, nil)}
-    match(:fn_stmt)                   {|stmt|         StmtsNode.new(stmt, nil)}
+    match(:fn_stmt, :eol, :fn_stmts) {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
+    match(:eol, :fn_stmts)           {|_,stmts|      StmtsNode.new(nil, stmts)}
+    match(:fn_stmt, :eol)            {|stmt,_|       StmtsNode.new(stmt, nil)}
+    match(:fn_stmt)                  {|stmt|         StmtsNode.new(stmt, nil)}
   end
 
   rule :fn_stmt do
-    match(:eol)                       {nil}
+    match(:eol)                       {StmtsNode.new(nil, nil)}
     match(:return_stmt)
     match(:stmt)
   end
 
   rule :fn_stmts_block do
+    match(:curbracket_block)          {StmtsNode.new(nil, nil)}
     match(:l_curbracket, :fn_stmts, :r_curbracket) {
       |_,stmts,_| stmts  # TODO: wrap in temp scope
     }
@@ -83,7 +84,7 @@ FUNCTIONS_PROC = Proc.new do
 
   rule :func_def do
     match(:func_ident, :name, :fn_stmts_block) {
-      |_,name,params,stmts|
+      |_,name,stmts|
       FunctionDefinition.new(name, [], "magic", stmts, scope_handler)
     }
     match(:func_ident, :name, :fn_ret_ident, :fn_stmts_block) {

@@ -2,20 +2,16 @@
 
 
 class StmtsNode < BaseNode
-  def initialize(stmt, stmts)
+  def initialize(stmt, stmts, quiet=false)
     @stmt, @stmts = stmt, stmts
+    @quiet = quiet
   end
 
   def eval
     out = @stmt != nil ? @stmt.eval : nil
     @stmts.eval if @stmts != nil
 
-    return out
-  end
-
-  def quiet_eval
-    @stmt.eval if @stmt != nil
-    @stmts.eval if @stmts != nil
+    return out if !@quiet
   end
 end
 
@@ -29,6 +25,10 @@ class ReturnStmtNode < CtrlStmtNode
 
   def initialize(value)
     @value = value
+  end
+
+  def eval
+    return @value.eval
   end
 end
 

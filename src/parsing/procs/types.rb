@@ -9,12 +9,12 @@ TYPES_PROC = Proc.new do
   
   rule :value do
     match(:literal)
-    match("empty")              {EmptyNode.new}
     match(:var)
     match("(", :cond, ")")      {|_,cond,_| cond}
   end
   
   rule :literal do
+    match("empty")              {EmptyNode.new}
     match(:flt)
     match(:int)
     match(:bool)
