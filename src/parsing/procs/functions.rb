@@ -5,6 +5,25 @@
 FUNCTIONS_PROC = Proc.new do
   |scope_handler|
 
+  rule :fn_stmts do
+    match(:fn_stmt, :eol, :fn_stmts)  {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
+    match(:eol, :fn_stmts)            {|_,stmts|      StmtsNode.new(nil, stmts)}
+    match(:fn_stmt, :eol)             {|stmt,_|       StmtsNode.new(stmt, nil)}
+    match(:fn_stmt)                   {|stmt|         StmtsNode.new(stmt, nil)}
+  end
+
+  rule :fn_stmt do
+    match(:eol)                       {nil}
+    match(:return_stmt)
+    match(:stmt)
+  end
+
+  rule :fn_stmts_block do
+    match(:l_curbracket, :fn_stmts, :r_curbracket) {
+      |_,stmts,_| stmts  # TODO: wrap in temp scope
+    }
+  end
+
   rule :param_def_list do
     match(':', :name, '=', :expr, ',', :param_def_list) {
       |_,name,_,value,_,params| [[name, "magic", value]].concat(params)
@@ -58,25 +77,25 @@ FUNCTIONS_PROC = Proc.new do
     match('fn', ':')
   end
 
-  rule :ret_ident do
+  rule :fn_ret_ident do
     match('->', :type) {|_,type| type}
   end
 
-  rule :func_definition do
-    match(:func_ident, :name, :stmts_block) {
+  rule :func_def do
+    match(:func_ident, :name, :fn_stmts_block) {
       |_,name,params,stmts|
       FunctionDefinition.new(name, [], "magic", stmts, scope_handler)
     }
-    match(:func_ident, :name, :ret_ident, :stmts_block) {
+    match(:func_ident, :name, :fn_ret_ident, :fn_stmts_block) {
       |_,name,ret_type,stmts|
       FunctionDefinition.new(name, [], ret_type, stmts, scope_handler)
     }
 
-    match(:func_ident, :name, :params_block, :stmts_block) {
+    match(:func_ident, :name, :params_block, :fn_stmts_block) {
       |_,name,params,stmts|
       FunctionDefinition.new(name, params, "magic", stmts, scope_handler)
     }
-    match(:func_ident, :name, :params_block, :ret_ident, :stmts_block) {
+    match(:func_ident, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
       |_,name,params,ret_type,stmts|
       FunctionDefinition.new(name, params, ret_type, stmts, scope_handler)
     }

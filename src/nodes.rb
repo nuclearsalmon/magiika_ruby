@@ -4,15 +4,10 @@ require 'singleton'
 require_relative './operators.rb'
 
 
-# Note: Defining a Node hierarchy like this is technically
-# unnecessary thanks to duck typing, but it makes reading
-# the relationships between different nodes easier.
-
-
 class BaseNode
   # evaluate
   def eval
-    raise MagiikaNotImplementedError.new
+    raise Error::NotImplemented.new
   end
 
   # optional method: `output'
@@ -66,7 +61,6 @@ class BaseNode
   end
 end
 
-
 class TypeNode < BaseNode
   include BooleanOperators
 
@@ -74,7 +68,7 @@ class TypeNode < BaseNode
   # (if values are applicable to the type, otherwise it will
   # likely just be a call to self.class.new)
   def self.get_default
-    raise MagiikaNotImplementedError.new
+    raise Error::NotImplemented.new
   end
 
   # evaluate
@@ -97,7 +91,7 @@ class TypeNode < BaseNode
 
   # class type
   def self.type
-    raise MagiikaNotImplementedError.new
+    raise Error::NotImplemented.new
   end
 
   # instance type (usually the same as the class type)
@@ -124,7 +118,7 @@ class TypeNode < BaseNode
 
   # cast to another type
   def cast(from)
-    raise MagiikaNoSuchCastError.new(from, self)
+    raise Error::NoSuchCast.new(from, self)
   end
 
   def ==(other)
@@ -148,8 +142,6 @@ class ContainerTypeNode < TypeNode
     @value.public_send(method_name, *args, &block)
   end
 end
-
-
 class EmptyNode < TypeNode
   include Singleton
 
@@ -179,7 +171,7 @@ class IntNode < ContainerTypeNode
 
   def initialize(value)
     if value.class != Integer
-      raise MagiikaMismatchedTypeError.new(value, self.type)
+      raise Error::MismatchedType.new(value, self.type)
     end
     super(value)
   end
@@ -201,7 +193,7 @@ class IntNode < ContainerTypeNode
   end
 
   def to_bytes
-    return unsign(@value)
+    return Utils.unsign([@value])
   end
 
   def ==(other)
@@ -265,7 +257,7 @@ class IntNode < ContainerTypeNode
     verify_classes(other, [FltNode, ])
 
     if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
-      raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
+      raise Error::MismatchedType.new("`#{self}', `#{other}'.")
     end
     
     value = @value.to_f.public_send(:/, other.value).truncate.to_i
@@ -288,7 +280,7 @@ class FltNode < ContainerTypeNode
 
   def initialize(value)
     if value.class != Integer && value.class != Float
-      raise MagiikaMismatchedTypeError.new(value, self.type)
+      raise Error::MismatchedType.new(value, self.type)
     end
     super(value)
   end
@@ -310,7 +302,7 @@ class FltNode < ContainerTypeNode
   end
 
   def to_bytes
-    return unsign(@value)
+    return Utils.unsign([@value])
   end
 
   def ==(other)
@@ -370,7 +362,7 @@ class FltNode < ContainerTypeNode
 
   def /(other)
     verify_classes(other, [IntNode, ])
-    value = round_float(passthrough_value(:/, other)).to_f
+    value = Utils.round_float(passthrough_value(:/, other)).to_f
     return self.class.new(value)
   end
 
@@ -378,7 +370,7 @@ class FltNode < ContainerTypeNode
     verify_classes(other, [IntNode, ])
 
     if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
-      raise MagiikaMismatchedTypeError("`#{self}', `#{other}'.")
+      raise Error::MismatchedType.new("`#{self}', `#{other}'.")
     end
     
     value = @value.to_f.public_send(:/, other.value).truncate.to_f
@@ -398,7 +390,7 @@ class BoolNode < ContainerTypeNode
 
   def initialize(value)
     if value.class != TrueClass and value.class != FalseClass
-      raise MagiikaMismatchedTypeError.new(value, self.type)
+      raise Error::MismatchedType.new(value, self.type)
     end
     super(value)
   end
@@ -445,7 +437,7 @@ class StrNode < ContainerTypeNode
 
   def initialize(value)
     if value.class != String
-      raise MagiikaMismatchedTypeError.new(value, self.type)
+      raise Error::MismatchedType.new(value, self.type)
     end
     super(value)
   end
@@ -467,7 +459,7 @@ class StrNode < ContainerTypeNode
   end
 
   def +(other=nil)
-    raise MagiikaUnsupportedOperationError.new("`+' `#{@value}'") if other == nil
+    raise Error::UnsupportedOperation.new("`+' `#{@value}'") if other == nil
 
     verify_class()
     return passthrough(:+, other)
@@ -485,9 +477,9 @@ end
 class MagicNode < ContainerTypeNode
   def initialize(value)
     if !(value.class < TypeNode)
-      raise MagiikaError.new("a MagicNode must be instansiated with a TypeNode.")
+      raise Error::Magiika.new("a MagicNode must be instansiated with a TypeNode.")
     elsif value.class <= MagicNode
-      raise MagiikaError.new("a MagicNode cannot contain another MagicNode.")
+      raise Error::Magiika.new("a MagicNode cannot contain another MagicNode.")
     end
     super(value)
   end
@@ -518,22 +510,33 @@ class MagicNode < ContainerTypeNode
 end
 
 
-BUILT_IN_TYPES = {
-  "empty" => EmptyNode,
-  "bool" => BoolNode, 
-  "int" => IntNode, 
-  "flt" => FltNode,
-  "str" => StrNode,
-  "magic" => MagicNode,}
+module TypeUtils
+  # ⭐ PRIVATE
+  # ---------------------------------------------------------------------------
+  private
 
+  BUILT_IN_TYPES = {
+    "empty" => EmptyNode,
+    "bool" => BoolNode, 
+    "int" => IntNode, 
+    "flt" => FltNode,
+    "str" => StrNode,
+    "magic" => MagicNode,}.freeze
 
-def is_valid_type(type)
-  return BUILT_IN_TYPES[type] == nil
-end
-
-
-def type_to_node_class(type)
-  cls = BUILT_IN_TYPES[type]
-  raise MagiikaInvalidTypeError.new(type) if cls == nil
-  return cls
+  
+  # ⭐ PUBLIC
+  # ---------------------------------------------------------------------------
+  public
+  
+  def valid_type?(type)
+    return BUILT_IN_TYPES[type] != nil
+  end
+  module_function :valid_type?
+  
+  def type_to_node_cls(type)
+    cls = BUILT_IN_TYPES[type]
+    raise Error::InvalidType.new(type) if cls == nil
+    return cls
+  end
+  module_function :type_to_node_cls
 end

@@ -11,8 +11,8 @@ class DeclareVariable < BaseNode
     @type, @name, @object = type, name, object
     @scope_handler = scope_handler
 
-    if BUILT_IN_TYPES.keys.include?(@name)
-      raise MagiikaUnsupportedOperationError.new(
+    if TypeUtils.valid_type?(@name)
+      raise Error::UnsupportedOperation.new(
         "using `#{@name}' as a variable name.")
     end
   end
@@ -20,14 +20,14 @@ class DeclareVariable < BaseNode
   def eval
     # get default object
     if @object == nil
-      obj = type_to_node_class(@type).get_default
+      obj = TypeUtils.type_to_node_cls(@type).get_default
     else
       obj = @object.eval
       
       if @type == MagicNode.type
         obj = MagicNode.new(obj)  # wrap in magic
       elsif (@object != nil and @type != @object.eval.unwrap_all.type)
-        raise MagiikaError.new("requested container type `#{@type}' " + 
+        raise Error::Magiika.new("requested container type `#{@type}' " + 
           "does not match data type `#{@object.type}'")
       end
     end
@@ -49,7 +49,7 @@ class AssignVariable < BaseNode
 
   def eval
     var = @scope_handler.get_var(@name)
-    raise MagiikaError.new("undefined variable `#{@name}'.") if var == nil
+    raise Error::Magiika.new("undefined variable `#{@name}'.") if var == nil
 
     obj = @object.eval #obj = @object.unwrap
     if var.type == MagicNode.type
@@ -59,7 +59,7 @@ class AssignVariable < BaseNode
       (var.type == MagicNode.type && (var.magic_type == obj.type))
       @scope_handler.set_var(@name, obj)
     else
-      raise MagiikaNoSuchCastError.new(obj, var)
+      raise Error::NoSuchCast.new(obj, var)
     end
     return obj
   end
@@ -90,8 +90,8 @@ class RedeclareVariable < BaseNode
     @name, @object = name, object
     @scope_handler = scope_handler
 
-    if BUILT_IN_TYPES.keys.include?(@name)
-      raise MagiikaUnsupportedOperationError.new(
+    if TypeUtils.valid_type?(@name)
+      raise Error::UnsupportedOperation.new(
         "using `#{@name}' as a variable name.")
     end
   end
@@ -99,7 +99,7 @@ class RedeclareVariable < BaseNode
   def eval_base
     # get default object
     if @object == nil
-      raise MagiikaUnsupportedOperationError.new(
+      raise Error::UnsupportedOperation.new(
         "redeclaration to nil.")
     else
       obj = MagicNode.new(@object.eval)  # wrap in magic

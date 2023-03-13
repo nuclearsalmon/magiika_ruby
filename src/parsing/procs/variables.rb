@@ -6,6 +6,7 @@ VARIABLES_PROC = Proc.new do
   |scope_handler|
   
   rule :var do
+    # match(:eol)  {nil}
     match(:name) {|name| RetrieveVariable.new(name, scope_handler)}
   end
 

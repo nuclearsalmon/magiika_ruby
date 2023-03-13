@@ -117,9 +117,6 @@ class Parser
   attr_accessor :pos
   attr_reader :rules, :string, :logger
 
-  class ParseError < RuntimeError
-  end
-
   def initialize(language_name, &block)
     @logger = Logger.new(STDOUT)
     @logger.formatter = proc do |severity, datetime, progname, msg|
@@ -139,7 +136,7 @@ class Parser
     until string.empty?
       # Unless any of the valid tokens of our language are the prefix of
       # 'string', we fail with an exception
-      raise MagiikaParseError.new("unable to lex `#{string}'.") unless @lex_tokens.any? do |tok|
+      raise Error::Parse.new("unable to lex `#{string}'.") unless @lex_tokens.any? do |tok|
         match = tok.pattern.match(string)
         # The regular expression of a token has matched the beginning of 'string'
         if match
@@ -172,7 +169,7 @@ class Parser
     result = @start.parse
     # If there are unparsed extra tokens, signal error
     if @pos != @tokens.size
-      raise MagiikaParseError.new(
+      raise Error::Parse.new(
         "expected `#{@expected.join(', ')}', found `#{@tokens[@max_pos]}'.")
     end
     return result

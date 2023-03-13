@@ -40,14 +40,14 @@ class ScopeHandler
       end
     end
 
-    raise MagiikaUndefinedVariableError.new(name)
+    raise Error::UndefinedVariable.new(name)
   end
 
   def add_var(name, obj)
     if @scopes[-1][name] == nil
       @scopes[-1][name] = obj
     else
-      raise MagiikaAlreadyDefinedError.new(name)
+      raise Error::AlreadyDefined.new(name)
     end
   end
 
@@ -89,14 +89,14 @@ class ScopeHandler
     if @scopes[-1][name] == nil
       @scopes[-1][name] = Hash.new
     else
-      raise MagiikaAlreadyDefinedError.new(name)
+      raise Error::AlreadyDefined.new(name)
     end
 
     # register new param_key for this name
     if @scopes[-1][name][param_key] == nil
       @scopes[-1][name][param_key] = definition
     else
-      raise MagiikaAlreadyDefinedError.new("#{name}(#{param_key})")
+      raise Error::AlreadyDefined.new("#{name}(#{param_key})")
     end
   end
 
@@ -117,24 +117,24 @@ class ScopeHandler
       
       # find arg name
       if arg_name == nil
-        raise MagiikaBadNrOfArgsError.new(fnsig, -1) if params.length < idx
+        raise Error::BadNrOfArgs.new(fnsig, -1) if params.length < idx
         arg_name = params[idx][0]
-        raise MagiikaBadNrOfArgsError.new(fnsig, -1) if arg_name == nil
+        raise Error::BadNrOfArgs.new(fnsig, -1) if arg_name == nil
       end
       
       # get param
       param = params_map[arg_name]
-      raise MagiikaBadArgNameError.new(fn_sig, arg_name) if param == nil
+      raise Error::BadArgName.new(fn_sig, arg_name) if param == nil
       param_type, param_name, param_def_val = *param
 
       # check param not already assigned
       if param_values[arg_name] != nil
-        raise MagiikaAlreadyDefinedError.new("Argument #{arg_name}")
+        raise Error::AlreadyDefined.new("Argument #{arg_name}")
       end
 
       # check param type matches arg type
       if param_type != "magic" && param_type != arg_val.type
-        raise MagiikaMismatchedTypeError.new(arg_val, param_type)
+        raise Error::MismatchedType.new(arg_val, param_type)
       end
 
       # assign arg value to param
@@ -147,7 +147,7 @@ class ScopeHandler
       param_name, param_type, param_def_val = *param
 
       next if param_values[param_name] != nil
-      raise MagiikaBadNrOfArgsError.new(fn_sig, -1) if param_def_val == nil
+      raise Error::BadNrOfArgs.new(fn_sig, -1) if param_def_val == nil
       param_values[param_name] = param_def_val
     }
 
@@ -165,7 +165,7 @@ class ScopeHandler
     result = EmptyNode.get_default if result == nil
     if !(ret_type == "magic" && result.type == "empty") && 
       ret_type != result.type
-      raise MagiikaMismatchedTypeError(result, ret_type)
+      raise Error::MismatchedType.new(result, ret_type)
     end
     return result
   end

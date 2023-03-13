@@ -12,21 +12,19 @@ PROGRAM_PROC = Proc.new do
   rule :stmts do
     # handle various EOL combinations
     match(:stmt, :eol, :stmts)  {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
-    match(:eol, :stmts)         {|stmt,stmts|   StmtsNode.new(stmt, stmts)}
+    match(:eol, :stmts)         {|_,stmts|      StmtsNode.new(nil, stmts)}
     match(:stmt, :eol)          {|stmt,_|       StmtsNode.new(stmt, nil)}
-    match(:eol)                 {|stmt|         StmtsNode.new(stmt, nil)}
-
-    # handle files that don't end in an EOL
     match(:stmt)                {|stmt|         StmtsNode.new(stmt, nil)}
   end
 
   rule :stmt do
+    match(:eol)                 {nil}
     match(:syslib_call)
 
     match(:if_stmt)
     match(:while_stmt)
 
-    match(:func_definition)
+    match(:func_def)
     match(:func_call)
 
     match(:declare_stmt)
@@ -37,8 +35,21 @@ PROGRAM_PROC = Proc.new do
   
   rule :stmts_block do
     match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| stmts
+      |_,stmts,_| stmts  # TODO: wrap in temp scope
     }
+  end
+
+  rule :return_stmt do
+    match("return", :cond)      {|_,stmt| ReturnStmtNode.new(stmt)}
+    match("return")             {ReturnStmtNode.new(nil)}
+  end
+  
+  rule :break_stmt do
+    match("break")              {BreakStmtNode.new}
+  end
+
+  rule :continue_stmt do
+    match("continue")           {ContinueStmtNode.new}
   end
 
   rule :syslib_call do

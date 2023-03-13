@@ -17,7 +17,7 @@ def _banner
   $stdout << ANSI_BANNER_SIXELS
   puts ANSI_BOLD_ACCENT_STYLE + " -    ⊹ M a g i i k a ₊+   - " + ANSI_RESET + 
     "\n"
-  puts ANSI_ACCENT_STYLE +      "   powered by ⊹sparkles₊+!   " + ANSI_RESET + 
+  puts ANSI_ACCENT_STYLE +      "   a ⊹₊magical₊+ language~   " + ANSI_RESET + 
     "\n\n"
 end
 
@@ -100,7 +100,7 @@ class Magiika
       else
         begin
           result = @parser.parse(input)
-        rescue MagiikaError => error
+        rescue Error::Magiika => error
           raise error if !@error_rescueing
           
           err_msg = error.to_s.strip + "\n"
@@ -113,8 +113,7 @@ class Magiika
         end
 
         if @raw_print
-          p result
-          puts ''
+          $stdout << "☄️  " << ANSI_WARNING_STYLE << result << "\n\n"
         else
           if result == nil
             puts ''
@@ -141,12 +140,11 @@ if __FILE__ == $0
     magiika.interactive
   else
     code = File.read(ARGV[0])
-
-    _banner()
-
-    # temporary code for until I make a print function in the language
     magiika = Magiika.new
-    result = magiika.parse(code)
-    puts "⭐ #{result}\n" if result
+    #magiika.logger.level = Logger::DEBUG
+    #_banner()
+    magiika.parse(code)
+    #result = magiika.parse(code)
+    #puts "⭐ #{result}\n" if result
   end
 end

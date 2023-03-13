@@ -7,22 +7,37 @@ class StmtsNode < BaseNode
   end
 
   def eval
-    if @stmt == :eol
-      out = nil
-    else 
-      out = @stmt.eval
-    end
+    out = @stmt != nil ? @stmt.eval : nil
+    @stmts.eval if @stmts != nil
 
-    if @stmts.class == StmtsNode 
-      @stmts.eval
-    end
     return out
   end
 
   def quiet_eval
-    @stmt.eval if @stmt != :eol
-    @stmts.eval if @stmts.class == StmtsNode
+    @stmt.eval if @stmt != nil
+    @stmts.eval if @stmts != nil
   end
+end
+
+
+class CtrlStmtNode < BaseNode
+end
+
+
+class ReturnStmtNode < CtrlStmtNode
+  attr_reader :value
+
+  def initialize(value)
+    @value = value
+  end
+end
+
+
+class ContinueStmtNode < CtrlStmtNode
+end
+
+
+class BreakStmtNode < CtrlStmtNode
 end
 
 
@@ -51,12 +66,12 @@ class UnaryExpressionNode < BaseNode
   end
 
   def eval
-    obj = @obj.eval
+    obj = @obj.eval.unwrap_all
 
     if obj.class.method_defined?(@op)
       return obj.public_send(@op)
     else
-      raise MagiikaUnsupportedOperationError.new(
+      raise Error::UnsupportedOperation.new(
         "`#{obj.type}' does not support `#{@op}'.")
     end
   end
@@ -69,19 +84,23 @@ class BinaryExpressionNode < BaseNode
   end
 
   def eval
-    l = @l.eval
-    r = @r.eval
+    l = @l.eval.unwrap_all
+    r = @r.eval.unwrap_all
     if l.class.method_defined?(@op)
       return l.public_send(@op, r)
     else
-      raise MagiikaUnsupportedOperationError.new(
+      raise Error::UnsupportedOperation.new(
         "`#{@l.type}' does not support `#{@op}'.")
     end
   end
 end
 
 
-class PrintNode < ContainerTypeNode
+class PrintNode < BaseNode
+  def initialize(value)
+    @value = value
+  end
+
   def eval
     result = @value.eval
     if result.respond_to?(:output)
