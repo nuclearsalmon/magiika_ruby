@@ -4,7 +4,8 @@
 # ------------------------------------------------------------------------------
 TOKENS_PROC = Proc.new do
   # whitespace
-  token(/(\n|;)+/)              {|_| :eol}          # eol marker
+  token(/\n/)                   {:eol_tok}  # eol marker
+  token(/;+/)                   {:eol}      # eol marker
 
   # comments
   token(/#.*$/)

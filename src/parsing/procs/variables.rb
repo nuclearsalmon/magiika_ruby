@@ -6,14 +6,14 @@ VARIABLES_PROC = Proc.new do
   |scope_handler|
   
   rule :var do
-    # match(:eol)  {nil}
+    match(:eol)  {nil}  # this is a hack but it fixes a really annoying issue.
     match(:name) {|name| RetrieveVariable.new(name, scope_handler)}
   end
 
   rule :declare_stmt do
     # special declaration syntax
-    #FIXME: This should later be inside a statement, not freestanding.
-    #       This is temporary just for testing purposes.
+    # FIXME: This should later be inside a statement, not freestanding.
+    #        This is temporary just for testing purposes.
     match(:name, ":=", :expr) {
       |name,_,value| 
       RedeclareVariable.new(name, value, scope_handler)

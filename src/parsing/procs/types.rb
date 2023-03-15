@@ -9,6 +9,7 @@ TYPES_PROC = Proc.new do
   
   rule :value do
     match(:literal)
+    match(:fn_call)
     match(:var)
     match("(", :cond, ")")      {|_,cond,_| cond}
   end

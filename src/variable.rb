@@ -24,9 +24,9 @@ class DeclareVariable < BaseNode
     else
       obj = @object.eval
       
-      if @type == MagicNode.type
+      if @type == MagicNode.type && obj.class != MagicNode
         obj = MagicNode.new(obj)  # wrap in magic
-      elsif (@object != nil and @type != @object.eval.unwrap_all.type)
+      elsif (obj == BaseNode and @type != obj.unwrap_all.type)
         raise Error::Magiika.new("requested container type `#{@type}' " + 
           "does not match data type `#{@object.type}'")
       end

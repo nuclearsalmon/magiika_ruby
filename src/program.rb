@@ -2,16 +2,21 @@
 
 
 class StmtsNode < BaseNode
-  def initialize(stmt, stmts, quiet=false)
-    @stmt, @stmts = stmt, stmts
-    @quiet = quiet
+  def initialize(stmts)
+    @stmts = stmts
   end
 
   def eval
-    out = @stmt != nil ? @stmt.eval : nil
-    @stmts.eval if @stmts != nil
-
-    return out if !@quiet
+    result = nil
+    @stmts.each {
+      |stmt|
+      next if stmt == nil || stmt == :eol
+      
+      result = stmt.eval
+      
+      return result if stmt.class == ReturnStmtNode
+    }
+    return result
   end
 end
 

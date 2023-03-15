@@ -161,8 +161,6 @@ class ScopeHandler
       result = stmts.eval
     }
 
-    p result
-
     # typecheck return value and ensure it's a node
     result = EmptyNode.get_default if result == nil
     if !(ret_type == "magic" || ret_type == result.type)

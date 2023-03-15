@@ -6,10 +6,16 @@ module Error
       super(msg)
     end
   end
-  
+
   class Parse < Error::Magiika
-    def initialize(msg)
-      msg = "parsing : " + msg
+    def initialize(msg, line=nil, col=nil)
+      if line != nil && col != nil
+        msg = "Error at line #{line}, col #{col}: #msg"
+      elsif line != nil
+        msg = "Error at line #{line}: #{msg}"
+      #elsif col != nil
+      #  msg = "Error at col #{col}: #{msg}"
+      end
       super(msg)
     end
   end

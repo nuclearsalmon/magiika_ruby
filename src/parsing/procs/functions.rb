@@ -6,22 +6,21 @@ FUNCTIONS_PROC = Proc.new do
   |scope_handler|
 
   rule :fn_stmts do
-    match(:fn_stmt, :eol, :fn_stmts) {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
-    match(:eol, :fn_stmts)           {|_,stmts|      StmtsNode.new(nil, stmts)}
-    match(:fn_stmt, :eol)            {|stmt,_|       StmtsNode.new(stmt, nil)}
-    match(:fn_stmt)                  {|stmt|         StmtsNode.new(stmt, nil)}
+    match(:fn_stmt, :eol, :fn_stmts)  {|stmt,_,stmts| [stmt].concat(stmts)}
+    match(:eol, :fn_stmts)            {|_,stmts|      [].concat(stmts)}
+    match(:fn_stmt, :eol)             {|stmt,_|       [stmt]}
+    match(:fn_stmt)                   {|stmt|         [stmt]}
   end
 
   rule :fn_stmt do
-    match(:eol)                       {StmtsNode.new(nil, nil)}
     match(:return_stmt)
     match(:stmt)
   end
 
   rule :fn_stmts_block do
-    match(:curbracket_block)          {StmtsNode.new(nil, nil)}
+    match(:curbracket_block)          {StmtsNode.new([])}
     match(:l_curbracket, :fn_stmts, :r_curbracket) {
-      |_,stmts,_| stmts  # TODO: wrap in temp scope
+      |_,stmts,_| StmtsNode.new(stmts)  # TODO: wrap in temp scope
     }
   end
 
@@ -73,7 +72,7 @@ FUNCTIONS_PROC = Proc.new do
     }
   end
 
-  rule :func_ident do
+  rule :fn_ident do
     match(':')
     match('fn', ':')
   end
@@ -82,31 +81,31 @@ FUNCTIONS_PROC = Proc.new do
     match('->', :type) {|_,type| type}
   end
 
-  rule :func_def do
-    match(:func_ident, :name, :fn_stmts_block) {
+  rule :fn_def do
+    match(:fn_ident, :name, :fn_stmts_block) {
       |_,name,stmts|
       FunctionDefinition.new(name, [], "magic", stmts, scope_handler)
     }
-    match(:func_ident, :name, :fn_ret_ident, :fn_stmts_block) {
+    match(:fn_ident, :name, :fn_ret_ident, :fn_stmts_block) {
       |_,name,ret_type,stmts|
       FunctionDefinition.new(name, [], ret_type, stmts, scope_handler)
     }
 
-    match(:func_ident, :name, :params_block, :fn_stmts_block) {
+    match(:fn_ident, :name, :params_block, :fn_stmts_block) {
       |_,name,params,stmts|
       FunctionDefinition.new(name, params, "magic", stmts, scope_handler)
     }
-    match(:func_ident, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
+    match(:fn_ident, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
       |_,name,params,ret_type,stmts|
       FunctionDefinition.new(name, params, ret_type, stmts, scope_handler)
     }
   end
 
-  rule :func_call_args do
-    match(:name, '=', :cond, ',', :func_call_args) {
+  rule :fn_call_args do
+    match(:name, '=', :cond, ',', :fn_call_args) {
       |name,_,arg,_,args| [[name, arg]].concat(args)
     }
-    match(:cond, ',', :func_call_args) {
+    match(:cond, ',', :fn_call_args) {
       |arg,_,args| [[nil, arg]].concat(args)
     }
     match(:name, '=', :cond) {
@@ -117,15 +116,15 @@ FUNCTIONS_PROC = Proc.new do
     }
   end
 
-  rule :func_call_args_block do
+  rule :fn_call_args_block do
     match(:parenthesis_block) {[]}
-    match(:l_parenthesis, :func_call_args, :r_parenthesis) {
+    match(:l_parenthesis, :fn_call_args, :r_parenthesis) {
       |_,args,_| args
     }
   end
 
-  rule :func_call do
-    match(:name, :func_call_args_block) {
+  rule :fn_call do
+    match(:name, :fn_call_args_block) {
       |name,args| FunctionCall.new(name, args, scope_handler)
     }
   end

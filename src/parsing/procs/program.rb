@@ -6,26 +6,29 @@ PROGRAM_PROC = Proc.new do
   |scope_handler|
 
   start :program do
-    match(:stmts)               {|stmts| stmts.eval}
+    match(:stmts)               {|stmts| StmtsNode.new(stmts).eval}
+  end
+
+  rule :eol do
+    match(:eol_tok, :eol)       {:eol}
+    match(:eol_tok)             {:eol}
   end
 
   rule :stmts do
-    # handle various EOL combinations
-    match(:stmt, :eol, :stmts)  {|stmt,_,stmts| StmtsNode.new(stmt, stmts)}
-    match(:eol, :stmts)         {|_,stmts|      StmtsNode.new(nil, stmts)}
-    match(:stmt, :eol)          {|stmt,_|       StmtsNode.new(stmt, nil)}
-    match(:stmt)                {|stmt|         StmtsNode.new(stmt, nil)}
+    match(:stmt, :eol, :stmts)  {|stmt,_,stmts| [stmt].concat(stmts)}
+    match(:eol, :stmts)         {|_,stmts|      stmts}
+    match(:stmt, :eol)          {|stmt,_|       [stmt]}
+    match(:stmt)                {|stmt|         [stmt]}
   end
 
   rule :stmt do
-    match(:eol)                 {StmtsNode.new(nil, nil)}
     match(:syslib_call)
 
     match(:if_stmt)
     match(:while_stmt)
 
-    match(:func_def)
-    match(:func_call)
+    match(:fn_def)
+    match(:fn_call)
 
     match(:declare_stmt)
     match(:assign_stmt)
@@ -35,7 +38,7 @@ PROGRAM_PROC = Proc.new do
   
   rule :stmts_block do
     match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| stmts  # TODO: wrap in temp scope
+      |_,stmts,_| StmtsNode.new(stmts)  # TODO: wrap in temp scope
     }
   end
 
