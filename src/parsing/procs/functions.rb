@@ -7,7 +7,7 @@ FUNCTIONS_PROC = Proc.new do
 
   rule :fn_stmts do
     match(:fn_stmt, :eol, :fn_stmts)  {|stmt,_,stmts| [stmt].concat(stmts)}
-    match(:eol, :fn_stmts)            {|_,stmts|      [].concat(stmts)}
+    match(:eol, :fn_stmts)            {|_,stmts|      stmts}
     match(:fn_stmt, :eol)             {|stmt,_|       [stmt]}
     match(:fn_stmt)                   {|stmt|         [stmt]}
   end
