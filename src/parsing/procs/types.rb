@@ -10,6 +10,7 @@ TYPES_PROC = Proc.new do
   rule :value do
     match(:literal)
     match(:fn_call)
+    match(:cls_member_access)
     match(:var)
     match("(", :cond, ")")      {|_,cond,_| cond}
   end
@@ -37,6 +38,11 @@ TYPES_PROC = Proc.new do
     match(:name)
   end
 
+  rule :type_ident do
+    match(':')                  {"magic"}
+    match(:type, ':')           {|type,_| type}
+  end
+
   rule :flt do
     match(Float)                {|flt| FltNode.new(flt)}
   end
@@ -46,8 +52,8 @@ TYPES_PROC = Proc.new do
   end
 
   rule :bool do
-    match(:true)                {|_| BoolNode.new(true)}
-    match(:false)               {|_| BoolNode.new(false)}
+    match(:true)                {BoolNode.new(true)}
+    match(:false)               {BoolNode.new(false)}
   end
 
   rule :str do

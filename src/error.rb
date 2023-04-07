@@ -66,8 +66,8 @@ module Error
   end
   
   class UndefinedVariable < Error::Magiika
-    def initialize(name)
-      msg = "undefined variable `#{name}'."
+    def initialize(name, msg = nil)
+      msg = "undefined variable `#{name}'." + (msg == nil ? "" : " " + msg)
       super(msg)
     end
   end
@@ -82,6 +82,20 @@ module Error
   class BadArgName < Error::Magiika
     def initialize(fnsig, badargname)
       msg = "invalid argument name for `#{fnsig}': #{badargname}."
+      super(msg)
+    end
+  end
+
+  class UnconstructedAbstract < Error::Magiika
+    def initialize(name, msg=nil)
+      msg = "Abstract `#{name}' not constructed." + (msg == nil ? "" : " " + msg)
+      super(msg)
+    end
+  end
+
+  class NotInitialized < Error::Magiika
+    def initialize(msg=nil)
+      msg = "Not initialized." + (msg == nil ? "" : " " + msg)
       super(msg)
     end
   end

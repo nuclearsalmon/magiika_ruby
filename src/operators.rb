@@ -45,28 +45,28 @@ end
 
 module BooleanOperators
   def and(other)
-    return BoolNode.new(self.bool_eval? && other.bool_eval?)
+    return BoolNode.new(self.bool_eval?(scope) && other.bool_eval?(scope))
   end
 
   def or(other)
-    return BoolNode.new(self.bool_eval? || other.bool_eval?)
+    return BoolNode.new(self.bool_eval?(scope) || other.bool_eval?(scope))
   end
 
   def nor(other)
-    return BoolNode.new(!(self.bool_eval? || other.bool_eval?))
+    return BoolNode.new(!(self.bool_eval?(scope) || other.bool_eval?(scope)))
   end
 
   def nand(other)
-    return BoolNode.new(!(self.bool_eval? && other.bool_eval?))
+    return BoolNode.new(!(self.bool_eval?(scope) && other.bool_eval?(scope)))
   end
 
   def xor(other)
-    return BoolNode.new(self.bool_eval? ^ other.bool_eval?)
+    return BoolNode.new(self.bool_eval?(scope) ^ other.bool_eval?(scope))
   end
 
   def xnor(other)
     # XNOR is simply equality on booleans
-    return BoolNode.new(self.bool_eval? == other.bool_eval?)
+    return BoolNode.new(self.bool_eval?(scope) == other.bool_eval?(scope))
   end
 end
 

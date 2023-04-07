@@ -10,7 +10,7 @@ class BaseNode
   end
 
   # evaluate
-  def eval
+  def eval(scope)
     raise Error::NotImplemented.new
   end
 
@@ -19,18 +19,7 @@ class BaseNode
 
   # unwrap one step
   def unwrap
-    return self
-  end
-
-  # unwrap down to class if possible
-  def unwrap_to_class(cls)
-    prev_value = self
-    value = unwrap
-    while value != prev_value and value.class != cls do
-      prev_value = value
-      value = value.unwrap
-    end
-    return value
+    return self  # default action
   end
 
   # unwrap down to bottom if possible
@@ -44,10 +33,25 @@ class BaseNode
     return value
   end
 
-  def unwrap_classes(classes)
+  # unwrap down to class if possible
+  def unwrap_to_class(cls, incl_self=true)
+    return self if (incl_self and self.class == cls)
+
     prev_value = self
     value = unwrap
-    while value != prev_value and !classes.include?(value.class) do
+    while value != prev_value and value.class != cls do
+      prev_value = value
+      value = value.unwrap
+    end
+    return value
+  end
+
+  def unwrap_to_classes(classes, incl_self=true)
+    return self if (incl_self and classes.include?(self.class))
+
+    prev_value = self
+    value = unwrap
+    while value != prev_value and classes.include?(value.class) do
       prev_value = value
       value = value.unwrap
     end
@@ -55,9 +59,11 @@ class BaseNode
   end
 
   def unwrap_except_classes(classes)
+    return self if (incl_self and classes.include?(self.class))
+
     prev_value = self
     value = unwrap
-    while value != prev_value and classes.include?(value.class) do
+    while value != prev_value and !classes.include?(value.class) do
       prev_value = value
       value = value.unwrap
     end
@@ -80,7 +86,7 @@ class TypeNode < BaseNode
   end
 
   # evaluate
-  def eval
+  def eval(scope)
     return self
   end
 
@@ -88,7 +94,7 @@ class TypeNode < BaseNode
     return [0x0]  # false
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     # coerce bytes into boolean result
     to_bytes.each {|e| return false if e != 0x0 }
     return true
@@ -160,7 +166,7 @@ class EmptyNode < TypeNode
     return self.instance
   end
 
-  def eval
+  def eval(scope)
     return self
   end
 
@@ -191,7 +197,7 @@ class IntNode < ContainerTypeNode
     return IntNode.new(0)
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     return @value != 0
   end
 
@@ -300,7 +306,7 @@ class FltNode < ContainerTypeNode
     return FltNode.new(0.0)
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     return @value != 0.0
   end
 
@@ -410,7 +416,7 @@ class BoolNode < ContainerTypeNode
     return BoolNode.new(false)
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     return @value
   end
 
@@ -457,7 +463,7 @@ class StrNode < ContainerTypeNode
     return StrNode.new("")
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     return @value != ""
   end
 
@@ -499,11 +505,11 @@ class MagicNode < ContainerTypeNode
     return MagicNode.new(EmptyNode.get_default)
   end
 
-  def eval
-    return @value.eval
+  def eval(scope)
+    return @value.eval(scope)
   end
 
-  def bool_eval?
+  def bool_eval?(scope)
     return @value != EmptyNode.get_default
   end
 

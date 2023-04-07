@@ -3,15 +3,15 @@
 # ✨ PROGRAM / CONTROL FLOW
 # ------------------------------------------------------------------------------
 PROGRAM_PROC = Proc.new do
-  |scope_handler|
-
   start :program do
-    match(:stmts)               {|stmts| StmtsNode.new(stmts).eval}
+    match(:stmts)               {|stmts| StmtsNode.new(stmts)}
   end
 
   rule :eol do
-    match(:eol_tok, :eol)       {:eol}
-    match(:eol_tok)             {:eol}
+    match(:eol_tok, :eol)       
+    match(:eol_mark, :eol)      
+    match(:eol_tok)             
+    match(:eol_mark)            
   end
 
   rule :stmts do
@@ -27,6 +27,9 @@ PROGRAM_PROC = Proc.new do
     match(:if_stmt)
     match(:while_stmt)
 
+    match(:cls_def)
+    match(:cls_member_access)
+
     match(:fn_def)
     match(:fn_call)
 
@@ -38,7 +41,7 @@ PROGRAM_PROC = Proc.new do
   
   rule :stmts_block do
     match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| StmtsNode.new(stmts)  # TODO: wrap in temp scope
+      |_,stmts,_| StmtsNode.new(stmts)  # TODO: wrap in temporary scope
     }
   end
 
@@ -72,40 +75,40 @@ PROGRAM_PROC = Proc.new do
   rule :if_stmt do
     match("if", :cond, ":", :stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
-      IfNode.new(cond, stmt, scope_handler, else_stmt=elif)
+      IfNode.new(cond, stmt, else_stmt=elif)
     }
     match("if", :cond, ":", :stmt) {
       |_,cond,_,stmt|
-      IfNode.new(cond, stmt, scope_handler)
+      IfNode.new(cond, stmt)
     }
 
     match("if", :cond, :stmts_block, :elif_stmt) {
       |_,cond,stmts,elif|
-      IfNode.new(cond, stmts, scope_handler, else_stmt=elif)
+      IfNode.new(cond, stmts, else_stmt=elif)
     }
     match("if", :cond, :stmts_block) {
       |_,cond,stmts|
-      IfNode.new(cond, stmts, scope_handler)
+      IfNode.new(cond, stmts)
     }
   end
 
   rule :elif_stmt do
     match(:elif_keyword, :cond, ":", :stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
-      IfNode.new(cond, stmt, scope_handler, elif_else=elif)
+      IfNode.new(cond, stmt, elif_else=elif)
     }
     match(:elif_keyword, :cond, ":", :stmt) {
       |_,cond,_,stmt|
-      IfNode.new(cond, stmt, scope_handler)
+      IfNode.new(cond, stmt)
     }
 
     match(:elif_keyword, :cond, :stmts_block, :elif_stmt) {
       |_,cond,stmts,elif|
-      IfNode.new(cond, stmts, scope_handler, elif_else=elif)
+      IfNode.new(cond, stmts, elif_else=elif)
     }
     match(:elif_keyword, :cond, :stmts_block) {
       |_,cond,stmts|
-      IfNode.new(cond, stmts, scope_handler)
+      IfNode.new(cond, stmts)
     }
 
     match(:else_stmt)
@@ -115,25 +118,25 @@ PROGRAM_PROC = Proc.new do
     match(:else_keyword, ":", :stmt) {
       |_,_,stmt|
       cond = BoolNode.new(true)  # always eval to true
-      IfNode.new(cond, stmt, scope_handler)
+      IfNode.new(cond, stmt)
     }
 
     match(:else_keyword, :stmts_block) {
       |_,stmts|
       cond = BoolNode.new(true)  # always eval to true
-      IfNode.new(cond, stmts, scope_handler)
+      IfNode.new(cond, stmts)
     }
   end
 
   rule :while_stmt do
     match("while", :cond, ":", :stmt) {
       |_,cond,_,stmt|
-      WhileNode.new(cond, stmt, scope_handler)
+      WhileNode.new(cond, stmt)
     }
 
     match("while", :cond, :stmts_block) {
       |_,cond,stmts|
-      WhileNode.new(cond, stmts, scope_handler)
+      WhileNode.new(cond, stmts)
     }
   end
 end

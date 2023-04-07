@@ -4,15 +4,21 @@
 class StmtsNode < BaseNode
   def initialize(stmts)
     @stmts = stmts
+    super()
   end
 
-  def eval
+  def unwrap()
+    return @stmts
+  end
+
+
+  def eval(scope)
     result = nil
     @stmts.each {
       |stmt|
       next if stmt == nil || stmt == :eol
       
-      result = stmt.eval
+      result = stmt.eval(scope)
       
       return result if stmt.class == ReturnStmtNode
     }
@@ -30,10 +36,11 @@ class ReturnStmtNode < CtrlStmtNode
 
   def initialize(value)
     @value = value
+    super()
   end
 
-  def eval
-    return @value.eval
+  def eval(scope)
+    return @value.eval(scope)
   end
 end
 
@@ -49,14 +56,15 @@ end
 class BooleanInverterNode < BaseNode
   def initialize(value)
     @value = value
+    super()
   end
 
-  def eval
-    return BoolNode.new(!(@value.bool_eval?)).eval
+  def eval(scope)
+    return BoolNode.new(!(@value.bool_eval?(scope))).eval(scope)
   end
 
-  def bool_eval?
-    return BoolNode.new(!(@value.bool_eval?)).bool_eval?
+  def bool_eval?(scope)
+    return BoolNode.new(!(@value.bool_eval?(scope))).bool_eval?(scope)
   end
 
   def output
@@ -68,10 +76,11 @@ end
 class UnaryExpressionNode < BaseNode
   def initialize(op, obj)
     @op, @obj = op, obj
+    super()
   end
 
-  def eval
-    obj = @obj.eval.unwrap_all
+  def eval(scope)
+    obj = @obj.eval(scope).unwrap_all
 
     if obj.class.method_defined?(@op)
       return obj.public_send(@op)
@@ -86,11 +95,12 @@ end
 class BinaryExpressionNode < BaseNode
   def initialize(l, op, r)
     @l, @op, @r = l, op, r
+    super()
   end
 
-  def eval
-    l = @l.eval.unwrap_all
-    r = @r.eval.unwrap_all
+  def eval(scope)
+    l = @l.eval(scope).unwrap_all
+    r = @r.eval(scope).unwrap_all
     if l.class.method_defined?(@op)
       return l.public_send(@op, r)
     else
@@ -104,10 +114,11 @@ end
 class PrintNode < BaseNode
   def initialize(value)
     @value = value
+    super()
   end
 
-  def eval
-    result = @value.eval
+  def eval(scope)
+    result = @value.eval(scope)
     if result.respond_to?(:output)
       puts result.output
     elsif result != nil
@@ -120,15 +131,15 @@ end
 
 
 class IfNode < BaseNode
-  def initialize(cond, stmt, scope_handler, else_stmt = nil)
+  def initialize(cond, stmt, else_stmt = nil)
     @cond, @stmt, @else_stmt = cond, stmt, else_stmt
-    @scope_handler = scope_handler
+    super()
   end
 
-  def eval
-    if @cond.bool_eval?
+  def eval(scope)
+    if @cond.bool_eval?(scope)
       result = nil
-      @scope_handler.temp_scope {
+      scope.exec_scope({:@scope_type => :control_if}) {
         result = @stmt.eval
       }
       return result 
@@ -140,14 +151,14 @@ end
 
 
 class WhileNode < BaseNode
-  def initialize(cond, stmts, scope_handler)
+  def initialize(cond, stmts)
     @cond, @stmts = cond, stmts
-    @scope_handler = scope_handler
+    super()
   end
 
-  def eval
-    while @cond.bool_eval? do
-      @scope_handler.temp_scope {
+  def eval(scope)
+    while @cond.bool_eval?(scope) do
+      scope.exec_scope({:@scope_type => :control_while}) {
         @stmts.eval
       }
     end

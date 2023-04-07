@@ -1,171 +1,174 @@
 #!/usr/bin/env ruby
 
-require_relative './functions.rb'  # FunctionUtils
 
-
-class ScopeHandler
+class Scope
   attr_reader :scopes
 
   def initialize
     @scopes = [Hash.new]
   end
 
-  def access_scope(name, assignment_obj = nil, param_key = nil)
-    i = @scopes.length-1  # set to end of scope stack
-    only_class_or_global = false
+  # ⭐ PROTECTED
+  # --------------------------------------------------------
+  protected
 
-    while (i >= 0)
-      target = @scopes[i][name]
-      if target == nil
-        i -= 1
-        next  # skip
-      end
+  # access_scope
+  #  name           (string): Key.
+  #  assignment_obj (any)   : Value to assign to key.
+  #  replace        (bool)  : Whether to replace existing value
+  #                           (requires assignment_obj).
+  #  retrieve       (bool)  : Whether to retrieve value if exists, 
+  #                           otherwise assign (requires assignment_obj).
+  def access_scope(name, 
+                   assignment_obj=nil,
+                   replace=false,
+                   retrieve=false)#,top_scope=true)
+    @scopes.each {
+      |scope|
+      next if scope[name] == nil    # skip
 
-      if param_key == nil             # name-based
-        if assignment_obj != nil      # assignment
-          @scopes[i][name] = assignment_obj
-          return  # FIXME: return `assignment_obj' here?
-        else                          # retrieval
-          return target
+      if assignment_obj != nil      # assignment
+        if replace
+          scope[name] = assignment_obj
+          return assignment_obj
         end
-      else                            # param_key-based
-        next if target.class != Hash  # skip non-hashes
-        
-        if assignment_obj != nil      # assignment
-          target[param_key] = assignment_obj
-          return  # FIXME: return `assignment_obj' here?
-        else                          # retrieval
-          return target[param_key]
+        if retrieve
+          return scope[name]
         end
+        raise Error::AlreadyDefined.new(name)
+      else                          # retrieval
+        return scope[name]
       end
-    end
+    }
 
-    raise Error::UndefinedVariable.new(name)
-  end
-
-  def add_var(name, obj)
-    if @scopes[-1][name] == nil
-      @scopes[-1][name] = obj
+    # handle not found
+    if assignment_obj != nil
+      @scopes[-1][name] = assignment_obj
+      if retrieve
+        return assignment_obj
+      end
     else
-      raise Error::AlreadyDefined.new(name)
+      raise Error::UndefinedVariable.new(name)
     end
   end
 
-  def relaxed_add_var(name, obj)
-    if @scopes[-1][name] == nil
-      @scopes[-1][name] = obj
-    else
-      set_var(name, obj)
+  # ⭐ PUBLIC
+  # --------------------------------------------------------
+  public
+
+  # ✨ Basics
+  # --------------------------------------------------------
+
+  def exist(name)
+    begin
+      access_scope(name)
+    rescue Error::UndefinedVariable
+      return false
     end
+    return true
   end
 
-  def get_var(name)
+  def set(name, obj, replace=false, retrieve=true)
+    return access_scope(name, obj, replace=replace, retrieve=retrieve)
+  end
+
+  def add(name, obj)
+    return access_scope(name, obj, replace=false, retrieve=false)
+  end
+
+  def get(name)
     return access_scope(name)
   end
 
-  def set_var(name, obj)
-    return access_scope(name, obj)
+  def get_smart_get(name, obj)
+    return access_scope(name, obj, replace=false, retrieve=true)
   end
 
-  def new_scope
-    @scopes << Hash.new
-  end
+  # ✨ Scope extension
+  # --------------------------------------------------------
 
-  def discard_scope
-    @scopes.delete_at(-1)
-  end
-
-  def temp_scope(&block)
+  def exec_tmp_scope(type = :temporary, &block)
     begin
-      new_scope
+      @scopes << {:@scope_type => type}
       block.call
     ensure
-      discard_scope
+      @scopes.delete_at(-1)
     end
   end
 
-  def add_func(name, param_key, definition)
-    # register new name
-    if @scopes[-1][name] == nil
-      @scopes[-1][name] = Hash.new
-    else
-      raise Error::AlreadyDefined.new(name)
-    end
-
-    # register new param_key for this name
-    if @scopes[-1][name][param_key] == nil
-      @scopes[-1][name][param_key] = definition
-    else
-      raise Error::AlreadyDefined.new("#{name}(#{param_key})")
-    end
-  end
-
-  def get_func(name, param_key)
-    return access_scope(name, nil, param_key)
-  end
-  
-  def temp_fn_call_scope(name, args)
-    fn_def = get_func(name, FunctionUtils.get_fn_key(args))
-    params, ret_type, stmts = *fn_def
-    fn_sig = FunctionUtils.get_fn_sig(name, params, ret_type)
-
-    params_map = Hash[params.collect{|v| [v[0], v[1..-1]]}]
-    param_values = Hash.new
-    args.each_with_index {
-      |arg, idx|
-      arg_name, arg_val = *arg
-      
-      # find arg name
-      if arg_name == nil
-        raise Error::BadNrOfArgs.new(fnsig, -1) if params.length < idx
-        arg_name = params[idx][0]
-        raise Error::BadNrOfArgs.new(fnsig, -1) if arg_name == nil
-      end
-      
-      # get param
-      param = params_map[arg_name]
-      raise Error::BadArgName.new(fn_sig, arg_name) if param == nil
-      param_type, param_name, param_def_val = *param
-
-      # check param not already assigned
-      if param_values[arg_name] != nil
-        raise Error::AlreadyDefined.new("Argument #{arg_name}")
-      end
-
-      # check param type matches arg type
-      if param_type != "magic" && param_type != arg_val.type
-        raise Error::MismatchedType.new(arg_val, param_type)
-      end
-
-      # assign arg value to param
-      param_values[arg_name] = arg_val
-    }
-
-    # assign defaults
-    params.each {
-      |param|
-      param_name, param_type, param_def_val = *param
-
-      next if param_values[param_name] != nil
-      raise Error::BadNrOfArgs.new(fn_sig, -1) if param_def_val == nil
-      param_values[param_name] = param_def_val
-    }
-
-    # run in temporary scope
+  def exec_scope(scope, &block)
     result = nil
-    temp_scope {
-      param_values.each {
-        |param_name, param_val|
-        add_var(param_name, param_val)
-      }
-      result = stmts.eval
-    }
-
-    # typecheck return value and ensure it's a node
-    result = EmptyNode.get_default if result == nil
-    if !(ret_type == "magic" || ret_type == result.type)
-      raise Error::MismatchedType.new(result, ret_type)
+    begin
+      @scopes << scope
+      result = block.call
+    ensure
+      @scopes.delete_at(-1)
     end
     return result
+  end
+
+  def exec_scopes(scopes, &block)
+    result = nil
+    begin
+      scopes.each {|scope| @scopes << scope}
+      result = block.call
+    ensure
+      scopes.each {@scopes.delete_at(-1)}
+    end
+    return result
+  end
+
+
+  # ✨ Section
+  # --------------------------------------------------------
+
+  def section_set(name, key, definition=nil, replace=false, retrieve=false)
+    section = access_scope(name, Hash.new, replace=false, retrieve=true)
+    raise Error::MismatchedType.new(section, Hash) if !section.instance_of?(Hash)
+
+    if key == nil                 # section instead of section item
+      if definition != nil
+        raise Error::UnsupportedOperation.new("Section head retrieval with definition.")
+      end
+      return section
+    end
+
+    if definition != nil          # assignment
+      if section[key] == nil
+        section[key] = definition
+        return definition
+      elsif replace
+        section[key] = definition
+        return definition
+      elsif retrieve
+        return section[key]
+      end
+      raise Error::AlreadyDefined.new("#{name}[#{key}]")
+    else                          # retrieval
+      item = section[key]
+      raise Error::UndefinedVariable.new("#{name}[#{key}]") if item == nil
+      return item
+    end
+  end
+
+  def section_add(name, key, definition)
+    return section_set(name, key, definition, replace=false, retrieve=false)
+  end
+
+  def section_get(name, key=nil)
+    return section_set(name, key)
+  end
+
+  def section_smart_get(name, key, definition)
+    return section_set(name, key, definition, replace=false, retrieve=true)
+  end
+
+  def section_exists(name, key=nil)
+    begin
+      section_set(name, key)
+    rescue Error::UndefinedVariable
+      return false
+    end
+    return true
   end
 end

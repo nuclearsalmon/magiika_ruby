@@ -46,14 +46,15 @@ class Magiika
     @error_rescueing = true
     @raw_print = false
     @show_empty = false
+    @scope = Scope.new()
   end
 
   def logger
     @parser.logger
   end
 
-  def parse(str)
-    @parser.parse(str)
+  def parse(input)
+    @parser.parse(input).eval(@scope)
   end
 
   def _handle_special_commands(input)
@@ -103,7 +104,9 @@ class Magiika
         _handle_special_commands(input)
       else
         begin
-          result = @parser.parse(input)
+          stmts = @parser.parse(input)
+          result = stmts.eval(@scope)
+          
         rescue Error::Magiika => error
           raise error if !@error_rescueing
           

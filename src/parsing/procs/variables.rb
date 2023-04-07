@@ -3,11 +3,9 @@
 # ✨ VARIABLES
 # ------------------------------------------------------------------------------
 VARIABLES_PROC = Proc.new do
-  |scope_handler|
-  
   rule :var do
     match(:eol)  {nil}  # this is a hack but it fixes a really annoying issue.
-    match(:name) {|name| RetrieveVariable.new(name, scope_handler)}
+    match(:name) {|name| RetrieveVariable.new(name)}
   end
 
   rule :declare_stmt do
@@ -16,17 +14,17 @@ VARIABLES_PROC = Proc.new do
     #        This is temporary just for testing purposes.
     match(:name, ":=", :expr) {
       |name,_,value| 
-      RedeclareVariable.new(name, value, scope_handler)
+      RedeclareVariable.new(name, value)
     }
 
     match(:magic_declare_stmt)
-    match(:static_declare_stmt)
+    match(:typed_declare_stmt)
   end
 
   rule :magic_declare_stmt do
     match(":", :name, "=", :cond) {
       |_,name,_,value| 
-      DeclareVariable.new("magic", name, value, scope_handler)
+      DeclareVariable.new("magic", name, value)
     }
 
     # eol handling
@@ -34,25 +32,25 @@ VARIABLES_PROC = Proc.new do
 
     match(":", :name) {
       |_,name| 
-      DeclareVariable.new("magic", name, scope_handler)
+      DeclareVariable.new("magic", name)
     }
   end
 
-  rule :static_declare_stmt do
+  rule :typed_declare_stmt do
     match(:built_in_type, ":", :name, "=", :expr) {
       |type,_,name,_,value| 
-      DeclareVariable.new(type, name, value, scope_handler)
+      DeclareVariable.new(type, name, value)
     }
     match(:built_in_type, ":", :name) {
       |type,_,name|
-      DeclareVariable.new(type, name, scope_handler)
+      DeclareVariable.new(type, name)
     }
   end
 
   rule :assign_stmt do
     match(:name, "=", :expr) {
       |name,_,value|
-      AssignVariable.new(name, value, scope_handler)
+      AssignVariable.new(name, value)
     }
   end
 end
