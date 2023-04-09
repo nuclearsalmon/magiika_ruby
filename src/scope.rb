@@ -22,7 +22,7 @@ class Scope
   def access_scope(name, 
                    assignment_obj=nil,
                    replace=false,
-                   retrieve=false)#,top_scope=true)
+                   retrieve=false)
     @scopes.each {
       |scope|
       next if scope[name] == nil    # skip

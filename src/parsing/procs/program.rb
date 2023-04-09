@@ -28,6 +28,7 @@ PROGRAM_PROC = Proc.new do
     match(:while_stmt)
 
     match(:cls_def)
+    match(:cls_assign_stmt)
     match(:cls_member_access)
 
     match(:fn_def)

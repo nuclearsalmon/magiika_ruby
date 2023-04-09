@@ -56,10 +56,10 @@ class AssignVariable < BaseNode
     obj = @object.eval #obj = @object.unwrap
     if var.type == MagicNode.type
       obj = MagicNode.new(obj)  # wrap in magic
-      scope.set(@name, obj)
+      scope.set(@name, obj, replace=true, retrieve=false)
     elsif var.type == obj.type || 
       (var.type == MagicNode.type && (var.magic_type == obj.type))
-      scope.set(@name, obj)
+      scope.set(@name, obj, replace=true, retrieve=false)
     else
       raise Error::NoSuchCast.new(obj, var)
     end

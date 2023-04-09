@@ -45,8 +45,12 @@ CLASSES_PROC = Proc.new do
   end
 
   rule :cls_stmt do
+    match(:static, :magic_declare_stmt) {|_,stmt| StaticNode.new(stmt)}
     match(:magic_declare_stmt)
+    
+    match(:static, :typed_declare_stmt) {|_,stmt| StaticNode.new(stmt)}
     match(:typed_declare_stmt)
+    
     match(:fn_def)
     match(:eol)
   end
@@ -86,7 +90,14 @@ CLASSES_PROC = Proc.new do
 
     match(:name, '.', :name) {
       |cls,_,member|
-      ClassAccessStmt.new(cls, member)
+      ClassAccessStmt.new(cls, member, nil)
+    }
+  end
+
+  rule :cls_assign_stmt do
+    match(:name, '.', :name, "=", :expr) {
+      |cls,_,member,_,value|
+      ClassAccessStmt.new(cls, member, value)
     }
   end
 end

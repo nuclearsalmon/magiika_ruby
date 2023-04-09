@@ -1,26 +1,38 @@
+class StaticNode < ContainerTypeNode
+  def eval(scope)
+    return @value.eval(scope)
+  end
+
+  def bool_eval?(scope)
+    return @value != EmptyNode.get_default
+  end
+
+  def output
+    return @value.output
+  end
+
+  def self.type
+    return "static"
+  end
+end
+
+
 class ClassNode < TypeNode
   attr_reader :name, :parent_cls_name
-  attr_reader :defined, :instantiate_static
-  attr_reader :cls_scope, :inst_stmts, :static_scope, :constructor_scope
+  attr_reader :defined, :define
+  attr_reader :cls_scope, :inst_stmts, :constructor_scope
 
   def initialize(name, stmts, parent_cls_name)
     @name                 = name
-    @stmts                = stmts
+    @stmts                = stmts  # unwrapped stmts
     @parent_cls_name      = parent_cls_name
     
     @defined              = false
     @cls_scope            = {:@scope_type => :cls_base}
     @inst_stmts           = []
-
-    @instantiated_static  = false
-    @static_scope         = {:@scope_type => :cls_static}
     @constructor_scope    = {:@scope_type => :cls_constructors}
     # no super() - no freeze
   end
-
-  # ⭐ PRIVATE
-  # --------------------------------------------------------
-  private
 
   def define(scope)
     return if @defined
@@ -48,31 +60,18 @@ class ClassNode < TypeNode
 
     @stmts.each {
       |stmt|
+      puts "\nstmt:"
+      p stmt
 
-      if stmt.class <= DeclareVariable
-        @inst_stmts << stmt
-      else
-        scope.exec_scope(@cls_scope) { stmt.eval(scope) }
-      end
-    }
-
-    defined = true
-  end
-
-  # ⭐ PUBLIC
-  # --------------------------------------------------------
-  public
-
-  def instantiate_static(scope)
-    define(scope)
-    return if @instantiated_static
-
-    @inst_stmts.each {
-      |stmt|
       if stmt.class <= ConstructorDefStmt
+        p 1
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
+      elsif stmt.class <= StaticNode or stmt.class <= FunctionDefStmt
+        p 2
+        scope.exec_scope(@cls_scope) { stmt.eval(scope) }
       else
-        scope.exec_scope(@static_scope) { stmt.eval(scope) }
+        p 3
+        @inst_stmts << stmt
       end
     }
 
@@ -82,41 +81,31 @@ class ClassNode < TypeNode
       }
     end
 
-    @instantiated_static = true
+    @defined = true
   end
 
   def get(name, scope)
-    instantiate_static(scope)
+    define(scope)
 
-    scopes = [
-      @cls_scope,
-      @static_scope
-    ]
-
-    return scope.exec_scopes(scopes) {
+    return scope.exec_scope(@cls_scope) {
       next scope.get(name)
     }
   end
 
   def set(name, value, scope)
-    instantiate_static(scope)
+    define(scope)
 
-    scopes = [
-      @cls_scope,
-      @static_scope
-    ]
-
-    return scope.exec_scopes(scopes) {
-      next scope.set(name, value, replace=true)
+    # FIXME SAFEGUARD AGAINST SETTING NEW VARIABLES
+    return scope.exec_scope(@cls_scope) {
+      next scope.set(name, value, replace=true, retrieve=false)
     }
   end
 
   def call(name, args, scope)
-    instantiate_static(scope)
+    define(scope)
 
     scopes = [
       @cls_scope,
-      @static_scope,
       {:@scope_type => :fn_call, "self" => self, "this" => self}
     ]
 
@@ -143,16 +132,22 @@ class ClassInstanceNode < TypeNode
   private
 
   def instantiate(args, scope)
+    @cls.define(scope)
+
     return if @instantiated
-    
-    @cls.instantiate_static(scope)
+
+    cls.inst_stmts.each {
+      |stmt|
+      if !(stmt.class <= StaticNode)
+        scope.exec_scope(@instance_scope) { stmt.eval(scope) }
+      end
+    }
 
     scopes = [
       cls.cls_scope,
-      cls.static_scope,
       @instance_scope,
       cls.constructor_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => self}
+      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
     scope.exec_scopes(scopes) {
@@ -186,8 +181,8 @@ class ClassInstanceNode < TypeNode
 
     scopes = [
       @cls.cls_scope,
-      @cls.static_scope,
-      @instance_scope
+      @instance_scope,
+      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -200,12 +195,11 @@ class ClassInstanceNode < TypeNode
 
     scopes = [
       @cls.cls_scope,
-      @cls.static_scope,
       @instance_scope
     ]
 
     return scope.exec_scopes(scopes) {
-      next scope.set(name, value, replace=true)
+      next scope.set(name, value, replace=true, retrieve=false)
     }
   end
 
@@ -214,9 +208,8 @@ class ClassInstanceNode < TypeNode
 
     scopes = [
       @cls.cls_scope,
-      @cls.static_scope,
       @instance_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => self}
+      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {
