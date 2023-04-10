@@ -39,8 +39,8 @@ TYPES_PROC = Proc.new do
   end
 
   rule :type_ident do
-    match(':')                  {"magic"}
     match(:type, ':')           {|type,_| type}
+    match(':')                  {"magic"}
   end
 
   rule :flt do
