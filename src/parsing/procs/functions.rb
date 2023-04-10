@@ -55,8 +55,9 @@ FUNCTIONS_PROC = Proc.new do
   end
 
   rule :fn_ident do
-    match(':')
+    match('func', ':')
     match('fn', ':')
+    match(':')
   end
 
   rule :fn_ret_ident do

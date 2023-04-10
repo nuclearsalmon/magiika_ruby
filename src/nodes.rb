@@ -34,7 +34,7 @@ class BaseNode
   end
 
   # unwrap down to class if possible
-  def unwrap_to_class(cls, incl_self=true)
+  def unwrap_class(cls, incl_self=true)
     return self if (incl_self and self.class == cls)
 
     prev_value = self
@@ -46,7 +46,7 @@ class BaseNode
     return value
   end
 
-  def unwrap_to_classes(classes, incl_self=true)
+  def unwrap_classes(classes, incl_self=true)
     return self if (incl_self and classes.include?(self.class))
 
     prev_value = self
@@ -151,6 +151,10 @@ class ContainerTypeNode < TypeNode
   def initialize(value)
     @value = value
     super()
+  end
+
+  def unwrap
+    return @value
   end
 
   def method_missing(method_name, *args, &block)

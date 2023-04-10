@@ -45,14 +45,22 @@ CLASSES_PROC = Proc.new do
   end
 
   rule :cls_stmt do
+    match(:cls_fn_def)
+
     match(:static, :magic_declare_stmt) {|_,stmt| StaticNode.new(stmt)}
     match(:magic_declare_stmt)
     
     match(:static, :typed_declare_stmt) {|_,stmt| StaticNode.new(stmt)}
     match(:typed_declare_stmt)
     
-    match(:fn_def)
     match(:eol)
+  end
+
+  rule :cls_fn_def do
+    match(:static, :fn_def) {
+      |_,fn_def| StaticNode.new(fn_def)
+    }
+    match(:fn_def)
   end
 
   rule :cls_inherit do
@@ -60,8 +68,9 @@ CLASSES_PROC = Proc.new do
   end
 
   rule :cls_ident do
-    match('cls', ':')
     match('class', ':')
+    match('cls', ':')
+    match(':')
   end
 
   rule :cls_def do

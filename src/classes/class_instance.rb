@@ -63,17 +63,21 @@ class ClassNode < TypeNode
       
       if stmt.class <= ConstructorDefStmt
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
-      elsif stmt.class <= FunctionDefStmt && stmt.name == "init" # transform to constructor
-        # safecheck return value
-        if !["self", "magic"].include?(stmt.ret_type)
-          raise Error::MismatchedType.new(stmt.ret_type, "self")
-        end
+      elsif stmt.class <= StaticNode
+        unstatic_stmt = stmt.unwrap()
 
-        scope.exec_scope(@constructor_scope) { 
-          ConstructorDefStmt.new(stmt.params, stmt.stmts).eval(scope)
-        }
-      elsif stmt.class <= StaticNode or stmt.class <= FunctionDefStmt
-        scope.exec_scope(@cls_scope) { stmt.eval(scope) }
+        if (unstatic_stmt.class <= FunctionDefStmt && unstatic_stmt.name == "init") # transform to constructor
+          # safecheck return value
+          if !["self", "magic"].include?(unstatic_stmt.ret_type)
+            raise Error::MismatchedType.new(unstatic_stmt.ret_type, "self")
+          end
+
+          scope.exec_scope(@constructor_scope) { 
+            ConstructorDefStmt.new(unstatic_stmt.params, unstatic_stmt.stmts).eval(scope)
+          }
+        else
+          scope.exec_scope(@cls_scope) { stmt.eval(scope) }
+        end
       else
         @inst_stmts << stmt
       end
@@ -91,7 +95,12 @@ class ClassNode < TypeNode
   def get(name, scope)
     define(scope)
 
-    return scope.exec_scope(@cls_scope) {
+    scopes = [
+      @cls_scope,
+      {:@scope_type => :fn_call, "this" => self}
+    ]
+
+    return scope.exec_scopes(scopes) {
       next scope.get(name)
     }
   end
@@ -110,7 +119,7 @@ class ClassNode < TypeNode
 
     scopes = [
       @cls_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => self}
+      {:@scope_type => :fn_call, "this" => self}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -212,7 +221,7 @@ class ClassInstanceNode < TypeNode
 
     scopes = [
       @cls.cls_scope,
-      #@instance_scope,
+      @instance_scope,
       {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
