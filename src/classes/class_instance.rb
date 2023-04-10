@@ -7,8 +7,8 @@ class StaticNode < ContainerTypeNode
     return @value != EmptyNode.get_default
   end
 
-  def output
-    return @value.output
+  def output(scope)
+    return @value.output(scope)
   end
 
   def self.type
@@ -60,17 +60,21 @@ class ClassNode < TypeNode
 
     @stmts.each {
       |stmt|
-      puts "\nstmt:"
-      p stmt
-
+      
       if stmt.class <= ConstructorDefStmt
-        p 1
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
+      elsif stmt.class <= FunctionDefStmt && stmt.name == "init" # transform to constructor
+        # safecheck return value
+        if !["self", "magic"].include?(stmt.ret_type)
+          raise Error::MismatchedType.new(stmt.ret_type, "self")
+        end
+
+        scope.exec_scope(@constructor_scope) { 
+          ConstructorDefStmt.new(stmt.params, stmt.stmts).eval(scope)
+        }
       elsif stmt.class <= StaticNode or stmt.class <= FunctionDefStmt
-        p 2
         scope.exec_scope(@cls_scope) { stmt.eval(scope) }
       else
-        p 3
         @inst_stmts << stmt
       end
     }
@@ -138,24 +142,24 @@ class ClassInstanceNode < TypeNode
 
     cls.inst_stmts.each {
       |stmt|
-      if !(stmt.class <= StaticNode)
-        scope.exec_scope(@instance_scope) { stmt.eval(scope) }
-      end
+      scope.exec_scope(@instance_scope) { stmt.eval(scope) }
     }
+
+    # need to set this to true before calling the constructor,
+    # so that we can access member variables and functions
+    @instantiated = true
 
     scopes = [
       cls.cls_scope,
-      @instance_scope,
       cls.constructor_scope,
+      @instance_scope,
       {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
     scope.exec_scopes(scopes) {
-      fn_call = FunctionCallStmt.new(:init, args)
+      fn_call = FunctionCallStmt.new("init", args)
       fn_call.eval(scope)
     }
-
-    @instantiated = true
   end
 
   # ⭐ PUBLIC
@@ -208,12 +212,12 @@ class ClassInstanceNode < TypeNode
 
     scopes = [
       @cls.cls_scope,
-      @instance_scope,
+      #@instance_scope,
       {:@scope_type => :fn_call, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {
-      fn_call = FunctionCallStmt.new(:init, args)
+      fn_call = FunctionCallStmt.new(name, args)
       next fn_call.eval(scope)
     }
   end

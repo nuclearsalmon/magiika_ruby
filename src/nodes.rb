@@ -170,7 +170,7 @@ class EmptyNode < TypeNode
     return self
   end
 
-  def output
+  def output(scope)
     return type
   end
 
@@ -201,7 +201,7 @@ class IntNode < ContainerTypeNode
     return @value != 0
   end
 
-  def output
+  def output(scope)
     return @value.to_s
   end
 
@@ -310,7 +310,7 @@ class FltNode < ContainerTypeNode
     return @value != 0.0
   end
 
-  def output
+  def output(scope)
     return @value.to_s
   end
 
@@ -420,7 +420,7 @@ class BoolNode < ContainerTypeNode
     return @value
   end
 
-  def output
+  def output(scope)
     return @value.to_s
   end
 
@@ -467,7 +467,7 @@ class StrNode < ContainerTypeNode
     return @value != ""
   end
 
-  def output
+  def output(scope)
     return @value
   end
 
@@ -513,8 +513,8 @@ class MagicNode < ContainerTypeNode
     return @value != EmptyNode.get_default
   end
 
-  def output
-    return @value.output
+  def output(scope)
+    return @value.output(scope)
   end
 
   def unwrap

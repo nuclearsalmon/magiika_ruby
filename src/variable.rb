@@ -53,7 +53,7 @@ class AssignVariable < BaseNode
     var = scope.get(@name)
     raise Error::Magiika.new("undefined variable `#{@name}'.") if var == nil
 
-    obj = @object.eval #obj = @object.unwrap
+    obj = @object.eval(scope) #obj = @object.unwrap
     if var.type == MagicNode.type
       obj = MagicNode.new(obj)  # wrap in magic
       scope.set(@name, obj, replace=true, retrieve=false)
@@ -105,7 +105,7 @@ class RedeclareVariable < BaseNode
       raise Error::UnsupportedOperation.new(
         "redeclaration to nil.")
     else
-      obj = MagicNode.new(@object.eval)  # wrap in magic
+      obj = MagicNode.new(@object.eval(scope))  # wrap in magic
     end
 
     scope.add(@name, obj, replace=True)

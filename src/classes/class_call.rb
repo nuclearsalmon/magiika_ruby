@@ -15,7 +15,7 @@ class ClassAccessStmt < BaseNode
     end
 
     if @value != nil
-      return cls.set(@member_name, @value, scope)
+      return cls.set(@member_name, @value.eval(scope), scope)
     else
       return cls.get(@member_name, scope)
     end

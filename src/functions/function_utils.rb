@@ -109,7 +109,11 @@ module FunctionUtils
 
       next if param_values[param_name] != nil
 
-      raise Error::BadNrOfArgs.new(full_fn_sig, -1) if param_def_val == nil
+      if param_def_val == nil
+        full_fn_sig = get_full_fn_sig(fn_def[:name], fn_def[:params], fn_def[:ret_type])
+        raise Error::BadNrOfArgs.new(full_fn_sig, -1) 
+      end
+
       param_values[param_name] = param_def_val
     }
 
@@ -131,6 +135,8 @@ module FunctionUtils
       end
     }
 
+    puts "\n"
+    p scope.scopes[-1]
     sig = "#{name}(#{get_fn_key(types_from_args(args))})"
     raise Error::UndefinedVariable.new(sig)
   end

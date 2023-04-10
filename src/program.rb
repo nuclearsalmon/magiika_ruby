@@ -2,6 +2,8 @@
 
 
 class StmtsNode < BaseNode
+  attr_reader :stmts
+  
   def initialize(stmts)
     @stmts = stmts
     super()
@@ -10,7 +12,6 @@ class StmtsNode < BaseNode
   def unwrap()
     return @stmts
   end
-
 
   def eval(scope)
     result = nil
@@ -22,7 +23,7 @@ class StmtsNode < BaseNode
       
       return result if stmt.class == ReturnStmtNode
     }
-    return result
+    return nil
   end
 end
 
@@ -67,7 +68,7 @@ class BooleanInverterNode < BaseNode
     return BoolNode.new(!(@value.bool_eval?(scope))).bool_eval?(scope)
   end
 
-  def output
+  def output(scope)
     return eval.to_s
   end
 end
@@ -120,7 +121,7 @@ class PrintNode < BaseNode
   def eval(scope)
     result = @value.eval(scope)
     if result.respond_to?(:output)
-      puts result.output
+      puts result.output(scope)
     elsif result != nil
       puts result
     else
@@ -140,11 +141,11 @@ class IfNode < BaseNode
     if @cond.bool_eval?(scope)
       result = nil
       scope.exec_scope({:@scope_type => :control_if}) {
-        result = @stmt.eval
+        result = @stmt.eval(scope)
       }
       return result 
     elsif @else_stmt
-      @else_stmt.eval
+      @else_stmt.eval(scope)
     end
   end
 end
@@ -159,7 +160,7 @@ class WhileNode < BaseNode
   def eval(scope)
     while @cond.bool_eval?(scope) do
       scope.exec_scope({:@scope_type => :control_while}) {
-        @stmts.eval
+        @stmts.eval(scope)
       }
     end
   end

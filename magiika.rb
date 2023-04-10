@@ -127,7 +127,7 @@ class Magiika
           elsif result.class.method_defined?(:output) &&
             (result.class != EmptyNode || 
               (result.class == EmptyNode && @show_empty))
-            result = result.output
+            result = result.output(@scope)
             print "⭐ #{result}\n\n"
           else
             print "\n"

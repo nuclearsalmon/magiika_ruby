@@ -2,6 +2,8 @@
 
 
 class AbstractFunctionDefStmt < BaseNode
+  attr_reader :name, :params, :ret_type
+
   def initialize(name, params, ret_type)
     @name, @params, @ret_type = name, params, ret_type
     super()
@@ -22,6 +24,8 @@ end
 
 
 class FunctionDefStmt < BaseNode
+  attr_reader :name, :params, :ret_type, :stmts
+
   def initialize(name, params, ret_type, stmts)
     @name, @params, @ret_type, @stmts = name, params, ret_type, stmts
     super()
@@ -34,6 +38,7 @@ class FunctionDefStmt < BaseNode
       :ret_type => @ret_type,
       :stmts => @stmts
     }
+
     fn_key = FunctionUtils.get_fn_key(FunctionUtils.types_from_params(@params))
     
     scope.section_add(@name, fn_key, fn_def)

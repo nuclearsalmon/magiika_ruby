@@ -24,7 +24,7 @@ class ConstructorDefStmt < FunctionDefStmt
       )
     )
     
-    super(:init, params, "self", stmts)
+    super("init", params, "self", stmts)
   end
 end
 

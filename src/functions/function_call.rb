@@ -23,7 +23,10 @@ class FunctionCallStmt < BaseNode
       # run in tmporary scope
       result = scope.exec_scope({:@scope_type => :fn_call}) {
         # inject parameter values into scope
-        param_values.each {|name, val| scope.set(name, val)}
+        param_values.each {|name, val| 
+          scope.set(name, val, true, false)
+        }
+
         # evaluate statements in scope
         next fn_def[:stmts].eval(scope)
       }
