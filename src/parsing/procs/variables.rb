@@ -37,11 +37,11 @@ VARIABLES_PROC = Proc.new do
   end
 
   rule :typed_declare_stmt do
-    match(:built_in_type, ":", :name, "=", :expr) {
+    match(:name, ":", :name, "=", :expr) {
       |type,_,name,_,value| 
       DeclareVariable.new(type, name, value)
     }
-    match(:built_in_type, ":", :name) {
+    match(:name, ":", :name) {
       |type,_,name|
       DeclareVariable.new(type, name)
     }

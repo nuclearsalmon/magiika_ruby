@@ -47,6 +47,8 @@ CLASSES_PROC = Proc.new do
   rule :cls_stmt do
     match(:cls_fn_def)
 
+    match(:cls_def)
+
     match(:static, :magic_declare_stmt) {|_,stmt| StaticNode.new(stmt)}
     match(:magic_declare_stmt)
     

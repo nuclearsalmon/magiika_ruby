@@ -39,6 +39,11 @@ FUNCTIONS_PROC = Proc.new do
       |type,name,_,params|
       [{:name => name, :type => type, :value => nil}].concat(params)
     }
+
+    match(:type_ident, :name, ',', :param_list) {
+      |type,name,_,params|
+      [{:name => name, :type => type, :value => nil}].concat(params)
+    }
     
     match(:param_def_list)
 
