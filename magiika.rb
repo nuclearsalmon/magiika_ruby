@@ -148,7 +148,7 @@ if __FILE__ == $0
   else
     code = File.read(ARGV[0])
     magiika = Magiika.new
-    #magiika.logger.level = Logger::DEBUG
+    magiika.logger.level = Logger::DEBUG
     magiika.parse(code)
   end
 end

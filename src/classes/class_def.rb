@@ -1,6 +1,25 @@
 #!/usr/bin/env ruby
 
 
+class StaticNode < ContainerTypeNode
+  def eval(scope)
+    return @value.eval(scope)
+  end
+
+  def bool_eval?(scope)
+    return @value != EmptyNode.get_default
+  end
+
+  def output(scope)
+    return @value.output(scope)
+  end
+
+  def self.type
+    return "static"
+  end
+end
+
+
 class ClassDefStmt < BaseNode
   def initialize(name, stmts, parent_cls_name=nil)
     @name, @stmts = name, stmts

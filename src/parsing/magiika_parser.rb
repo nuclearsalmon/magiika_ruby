@@ -20,7 +20,7 @@ require_relative './procs/tokens.rb'
 require_relative './procs/commons.rb'
 require_relative './procs/program.rb'
 require_relative './procs/types.rb'
-require_relative './procs/variables.rb'
+require_relative './procs/objects.rb'
 require_relative './procs/functions.rb'
 require_relative './procs/conditions.rb'
 require_relative './procs/expressions.rb'
@@ -43,8 +43,8 @@ class MagiikaParser
       instance_eval &COMMONS_PROC
       instance_eval &TYPES_PROC
       instance_eval &PROGRAM_PROC
+      instance_eval &OBJECTS_PROC
       instance_eval &CLASSES_PROC
-      instance_eval &VARIABLES_PROC
       instance_eval &FUNCTIONS_PROC
       instance_eval &CONDITIONS_PROC
       instance_eval &EXPRESSIONS_PROC

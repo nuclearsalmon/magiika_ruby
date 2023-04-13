@@ -1,20 +1,4 @@
-class StaticNode < ContainerTypeNode
-  def eval(scope)
-    return @value.eval(scope)
-  end
-
-  def bool_eval?(scope)
-    return @value != EmptyNode.get_default
-  end
-
-  def output(scope)
-    return @value.output(scope)
-  end
-
-  def self.type
-    return "static"
-  end
-end
+#!/usr/bin/env ruby
 
 
 class ClassNode < TypeNode
@@ -127,6 +111,20 @@ class ClassNode < TypeNode
     }
   end
 
+  def run(scope, stmt)
+    define(scope)
+
+    scopes = [
+      @cls_scope,
+      {:@scope_type => :fn_call, "this" => self}
+    ]
+
+    return scope.exec_scopes(scopes) {
+      next stmt.eval(scope)
+    }
+  end
+
+
   def self.type
     return "cls"
   end
@@ -226,8 +224,21 @@ class ClassInstanceNode < TypeNode
     ]
 
     return scope.exec_scopes(scopes) {
-      fn_call = FunctionCallStmt.new(name, args)
-      next fn_call.eval(scope)
+      next FunctionCallStmt.new(name, args).eval(scope)
+    }
+  end
+
+  def run(scope, stmt)
+    raise Error::NotInitialized.new() if !@instantiated
+
+    scopes = [
+      @cls.cls_scope,
+      @instance_scope,
+      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
+    ]
+
+    return scope.exec_scopes(scopes) {
+      next stmt.eval(scope)
     }
   end
 

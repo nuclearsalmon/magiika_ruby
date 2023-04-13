@@ -9,9 +9,9 @@ TYPES_PROC = Proc.new do
   
   rule :value do
     match(:literal)
+    match(:chained_access)
     match(:fn_call)
-    match(:cls_member_access)
-    match(:var)
+    match(:retrieve_var)
     match("(", :cond, ")")      {|_,cond,_| cond}
   end
   
