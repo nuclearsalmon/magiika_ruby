@@ -1,0 +1,239 @@
+#!/usr/bin/env ruby
+
+
+class Scope
+  attr_reader :scopes
+
+  def initialize
+    @scopes = [{:@scope_type => :global}]
+  end
+
+  # ⭐ PROTECTED
+  # --------------------------------------------------------
+  protected
+
+
+  # access_scope
+  #  name   (string)  : Key.
+  #  value  (any/nil) : Value to assign to key.
+  #  mode   (symbol)  : The mode to operate in.
+  #  - `:default`     :  Error if  already defined,
+  #                       do not replace.
+  #                       Does nothing when `value=nil`.
+  #  - `:replace`     :  Replace if already defined.
+  #                       Errors when `value=nil`.
+  #  - `:retrieve`    :  Return obj if already defined,
+  #                       do not replace.
+  #                       Errors when `value=nil`.
+  #  - `:push`        :  Push to top of scopestack, error if
+  #                       already defined in top scopestack.
+  def access_scope(name,
+                   value=nil,
+                   mode=:default)
+    #puts "Access `#{name}` in `#{mode}` mode, with value:"
+    #p value
+    #puts "\n"
+    #if name == "type" && value == nil
+    #  raise Error::Magiika.new("fucky wucky") 
+    #end
+    #puts "\n"
+
+    if mode == :push
+      raise Error::Magiika.new("Push mode requires a value.") if value == nil
+      raise Error::AlreadyDefined.new(name) if @scopes[-1][name] != nil
+      @scopes[-1][name] = value
+      return value
+    end
+
+    if value == nil and mode != :default
+      raise Error::Magiika.new(
+        "Retrieval only uses the `:default` mode. Requested mode: `#{mode}`")
+    end
+
+    cls_scope_types = [
+      :cls,
+      :cls_constructors,
+      :cls_inst,
+    ]
+
+    @scopes.reverse_each {
+      |scope|
+      next if scope[name] == nil
+      
+      if value != nil    # assignment
+        case mode
+        when :default
+          raise Error::AlreadyDefined.new(name)
+        when :replace
+          scope[name] = value
+          return value
+        when :retrieve
+          return scope[name]
+        else
+          raise Error::Magiika.new("Undefined mode: `#{mode}`")
+        end
+      else              # retrieval
+        return scope[name]
+      end
+    }
+
+    # name not found
+    if value != nil       # assignment
+      @scopes[-1][name] = value
+      return value
+    else                  # retrieval
+      raise Error::UndefinedVariable.new(name)
+    end
+  end
+
+
+  # ⭐ PUBLIC
+  # --------------------------------------------------------
+  public
+
+  # ✨ Basics
+  # --------------------------------------------------------
+
+  def exist(name)
+    begin
+      access_scope(name)
+    rescue Error::UndefinedVariable
+      return false
+    end
+    return true
+  end
+
+  def set(name, obj, mode=:default)
+    # This is possible, but not the indended usage of the `set` function.
+    raise Error::UnsupportedOperation.new("Attempted to set to nil.") if obj == nil
+
+    return access_scope(name, obj, mode)
+  end
+
+  def add(name, obj)
+    return access_scope(name, obj, :push)
+  end
+
+  def get(name)
+    return access_scope(name)
+  end
+
+  def get_smart_get(name, obj)
+    return access_scope(name, obj, :retrieve)
+  end
+
+  # ✨ Scope extension
+  # --------------------------------------------------------
+
+  def exec_tmp_scope(type=:temporary, &block)
+    begin
+      @scopes << {:@scope_type => type}
+      block.call
+    ensure
+      @scopes.delete_at(-1)
+    end
+  end
+
+  def exec_scope(scope, &block)
+    result = nil
+    begin
+      @scopes << scope
+      result = block.call
+    ensure
+      @scopes.delete_at(-1)
+    end
+    return result
+  end
+
+  def exec_scopes(scopes, &block)
+    result = nil
+    begin
+      scopes.each {|scope| @scopes << scope}
+      result = block.call
+    ensure
+      scopes.each {@scopes.delete_at(-1)}
+    end
+    return result
+  end
+
+
+  # ✨ Section
+  # --------------------------------------------------------
+
+  # section_set
+  #  name   (string)  : Section head key.
+  #  key    (any/nil) : Section item key.
+  #  value  (any/nil) : Section item value.
+  #  mode   (symbol)  : The mode to operate in.
+  #  - `:default`     :  Error if  already defined,
+  #                       do not replace.
+  #                       Does nothing when `value=nil`.
+  #  - `:replace`     :  Replace if already defined.
+  #                       Errors when `value=nil`.
+  #  - `:retrieve`    :  Return obj if already defined,
+  #                       do not replace.
+  #                       Errors when `value=nil`.
+  def section_set(name, key, definition=nil, mode=:default)
+    section = access_scope(name, Hash.new, :retrieve)
+    raise Error::MismatchedType.new(section, Hash) if !section.instance_of?(Hash)
+
+    if key == nil             # section instead of section item
+      if definition != nil
+        raise Error::UnsupportedOperation.new("Section head retrieval with definition.")
+      end
+      if mode != :default
+        raise Error::Magiika.new(
+          "Section head retrieval only uses the `:default` mode. \
+          Requested mode: `#{mode}`")
+      end
+      return section
+    end
+
+    if definition != nil    # assignment
+      case mode
+      when :default
+        if section[key] != nil
+          raise Error::AlreadyDefined.new("#{name}[#{key}]")
+        end
+        section[key] = definition
+      when :replace
+        section[key] = definition
+      when :retrieve
+        return section[key]
+      else
+        raise Error::Magiika.new("Undefined mode: `#{mode}`")
+      end
+    else              # retrieval
+      if mode != :default
+        raise Error::Magiika.new(
+          "Definitionless section retrieval only uses the `:default` mode. \
+          Requested mode: `#{mode}`")
+      end
+
+      item = section[key]
+      raise Error::UndefinedVariable.new("#{name}[#{key}]") if item == nil
+      return item
+    end
+  end
+
+  def section_add(name, key, definition)
+    return section_set(name, key, definition)
+  end
+
+  def section_get(name, key=nil)
+    return section_set(name, key)
+  end
+
+  def section_smart_get(name, key, definition)
+    return section_set(name, key, definition, mode=:retrieve)
+  end
+
+  def section_exists(name, key=nil)
+    begin
+      section_set(name, key)
+    rescue Error::UndefinedVariable
+      return false
+    end
+    return true
+  end
+end

@@ -14,7 +14,11 @@ module FunctionUtils
 
   def types_from_args(args)
     types = []
-    args.each {|arg| types << arg[:value].type}
+    args.each {
+      |arg|
+      type = arg[:value].respond_to?(:type) ? arg[:value].type : "magic"
+      types << type
+    }
     return types
   end
   module_function :types_from_args
@@ -63,14 +67,14 @@ module FunctionUtils
   # ⭐ Function definition argument fitting
   # ---------------------------------------------------------------------------
 
-  def fill_params(fn_def, args)
+  def fill_params(fn_def, args, scope)
     params = fn_def[:params]
 
     raise Error::BadNrOfArgs.new(fn_def, -1) if params.length < args.length
     
     # map params
     params_map = Hash[params.collect{|v| [v[:name], v]}]
-    param_values = Hash.new
+    fn_call_scope = Hash.new
 
     # parse args
     args.each_with_index {
@@ -89,35 +93,51 @@ module FunctionUtils
       param_type, _, param_def_val = *param
 
       # check param not already assigned
-      if param_values[arg_name] != nil
+      if fn_call_scope[arg_name] != nil
         raise Error::AlreadyDefined.new("Argument #{arg_name}")
       end
 
+      arg_value = arg_value.eval(scope)
+
       # check param type matches arg type
-      if !(param[:type] == "magic" || param[:type] == arg_value.type)
+      if !(param[:type] == "magic" || \
+          param[:type] == arg_value.type)
         raise Error::MismatchedType.new(arg_value, param_type)
       end
 
       # assign arg value to param
-      param_values[arg_name] = arg_value
+      fn_call_scope[arg_name] = arg_value
     }
 
-    # assign default if misisng ,otherwise error
+    # assign default if missing, otherwise error
     params.each {
       |param|
       param_name, param_def_val = param[:name], param[:value]
 
-      next if param_values[param_name] != nil
+      next if fn_call_scope[param_name] != nil
 
       if param_def_val == nil
         full_fn_sig = get_full_fn_sig(fn_def[:name], fn_def[:params], fn_def[:ret_type])
         raise Error::BadNrOfArgs.new(full_fn_sig, -1) 
       end
 
-      param_values[param_name] = param_def_val
+      fn_call_scope[param_name] = param_def_val
     }
 
-    return param_values
+    # eval all values
+    fn_call_scope.each {|name,value|
+      fn_call_scope[name] = value.eval(scope)
+      puts "-----"
+      p name
+      p value
+      p fn_call_scope[name]
+      puts "-----"
+    }
+
+    # set scope type
+    fn_call_scope[:@scope_type] = :fn_call
+
+    return fn_call_scope
   end
   module_function :fill_params
 
@@ -127,16 +147,14 @@ module FunctionUtils
       |_,fn_def|
 
       begin
-        param_values = fill_params(fn_def, args)
-        return [fn_def, param_values]
+        fn_call_scope = fill_params(fn_def, args, scope)
+        return [fn_def, fn_call_scope]
       rescue Error::BadNrOfArgs, Error::BadArgName, \
           Error::MismatchedType, Error::AlreadyDefined
         nil
       end
     }
 
-    puts "\n"
-    p scope.scopes[-1]
     sig = "#{name}(#{get_fn_key(types_from_args(args))})"
     raise Error::UndefinedVariable.new(sig)
   end

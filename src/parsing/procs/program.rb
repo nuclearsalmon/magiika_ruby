@@ -28,12 +28,8 @@ PROGRAM_PROC = Proc.new do
     match(:while_stmt)
 
     match(:cls_def)
-    match(:chained_access)
-    #match(:cls_assign_stmt)
-    #match(:cls_member_access)
 
     match(:fn_def)
-    match(:fn_call)
 
     match(:declare_var)
     match(:assign_var)

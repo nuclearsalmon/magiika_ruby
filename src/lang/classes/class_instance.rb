@@ -11,10 +11,10 @@ class ClassNode < TypeNode
     @stmts                = stmts  # unwrapped stmts
     @parent_cls_name      = parent_cls_name
     
-    @defined              = false
-    @cls_scope            = {:@scope_type => :cls_base}
-    @inst_stmts           = []
-    @constructor_scope    = {:@scope_type => :cls_constructors}
+    @defined            = false
+    @cls_scope          = {:@scope_type => :cls}
+    @inst_stmts         = []
+    @constructor_scope  = {:@scope_type => :cls_constructors}
     # no super() - no freeze
   end
 
@@ -38,8 +38,8 @@ class ClassNode < TypeNode
         raise Error::MismatchedType(parent, ClassDefStmt)
       end
 
-      @cls_scope = parent.cls_scope.clone    # shallow
-      @inst_stmts = parent.inst_stmts.clone  # shallow
+      @cls_scope   = parent.cls_scope.clone   # shallow
+      @inst_stmts     = parent.inst_stmts.clone     # shallow
     end
 
     @stmts.each {
@@ -47,10 +47,12 @@ class ClassNode < TypeNode
       
       if stmt.class <= ConstructorDefStmt
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
+      elsif stmt.class <= ClassDefStmt
+        scope.exec_scope(@cls_scope) { stmt.eval(scope) }
       elsif stmt.class <= StaticNode
         unstatic_stmt = stmt.unwrap()
 
-        if (unstatic_stmt.class <= FunctionDefStmt && unstatic_stmt.name == "init") # transform to constructor
+        if (unstatic_stmt.name == "init") # transform to constructor
           # safecheck return value
           if !["self", "magic"].include?(unstatic_stmt.ret_type)
             raise Error::MismatchedType.new(unstatic_stmt.ret_type, "self")
@@ -115,8 +117,9 @@ class ClassNode < TypeNode
     define(scope)
 
     scopes = [
+      {:@scope_type => :begin},
       @cls_scope,
-      {:@scope_type => :fn_call, "this" => self}
+      {:@scope_type => :end, "this" => self}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -145,22 +148,19 @@ class ClassInstanceNode < TypeNode
   def instantiate(args, scope)
     @cls.define(scope)
 
-    return if @instantiated
-
-    cls.inst_stmts.each {
-      |stmt|
-      scope.exec_scope(@instance_scope) { stmt.eval(scope) }
+    scopes = [
+      @cls.cls_scope,
+      @instance_scope
+    ]
+    scope.exec_scopes(scopes) { 
+      @cls.inst_stmts.each {|stmt| stmt.eval(scope)}
     }
 
-    # need to set this to true before calling the constructor,
-    # so that we can access member variables and functions
-    @instantiated = true
-
     scopes = [
-      cls.cls_scope,
-      cls.constructor_scope,
+      @cls.cls_scope,
       @instance_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
+      @cls.constructor_scope,
+      {:@scope_type => :fn_call_constructor, "self" => self, "this" => @cls}
     ]
 
     scope.exec_scopes(scopes) {
@@ -175,11 +175,10 @@ class ClassInstanceNode < TypeNode
 
   def initialize(cls, args, scope)
     @cls = cls
-
-    @instantiated = false
-    @instance_scope = {:@scope_type => :cls_instance}
-
+    @instance_scope = {:@scope_type => :cls_inst}
+    
     instantiate(args, scope)
+
     # no super() - no freeze
   end
 
@@ -188,8 +187,6 @@ class ClassInstanceNode < TypeNode
   end
 
   def get(name, scope)
-    raise Error::NotInitialized.new() if !@instantiated
-
     scopes = [
       @cls.cls_scope,
       @instance_scope,
@@ -202,8 +199,6 @@ class ClassInstanceNode < TypeNode
   end
 
   def set(name, value, scope)
-    raise Error::NotInitialized.new() if !@instantiated
-
     scopes = [
       @cls.cls_scope,
       @instance_scope
@@ -215,8 +210,6 @@ class ClassInstanceNode < TypeNode
   end
 
   def call(name, args, scope)
-    raise Error::NotInitialized.new() if !@instantiated
-
     scopes = [
       @cls.cls_scope,
       @instance_scope,
@@ -228,13 +221,12 @@ class ClassInstanceNode < TypeNode
     }
   end
 
-  def run(scope, stmt)
-    raise Error::NotInitialized.new() if !@instantiated
-
+  def run(stmt, scope)
     scopes = [
+      {:@scope_type => :begin},
       @cls.cls_scope,
       @instance_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
+      {:@scope_type => :end, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {

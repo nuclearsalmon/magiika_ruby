@@ -19,11 +19,15 @@ class StmtsNode < BaseNode
       |stmt|
       next if stmt == nil || stmt == :eol
       
-      result = stmt.eval(scope)
+      tmp_result = stmt.eval(scope)
       
-      return result if stmt.class == ReturnStmtNode
+      if stmt.class <= ReturnStmtNode
+        result = tmp_result
+        result = EmptyNode.get_default if result == nil
+        break
+      end
     }
-    return nil
+    return result
   end
 end
 

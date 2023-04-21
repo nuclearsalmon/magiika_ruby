@@ -46,14 +46,14 @@ CLASSES_PROC = Proc.new do
   end
 
   rule :cls_stmt do
+    match(:cls_def)
+
     match(:static, :fn_def)       {|_,fn_def| StaticNode.new(fn_def)}
     match(:fn_def)
 
     match(:static, :declare_var)  {|_,stmt| StaticNode.new(stmt)}
     match(:declare_var)
 
-    match(:cls_def)
-    
     match(:eol)
   end
 
@@ -84,23 +84,4 @@ CLASSES_PROC = Proc.new do
       AbstractClassDefStmt.new(name, stmts, cls_inh)
     }
   end
-
-  #rule :cls_member_access do
-  #  match(:name, '.', :name, :fn_call_args_block) do
-  #    |cls,_,member,args|
-  #    ClassFunctionCallStmt.new(cls,member,args)
-  #  end
-  #
-  #  match(:name, '.', :name) {
-  #    |cls,_,member|
-  #    ClassAccessStmt.new(cls, member, nil)
-  #  }
-  #end
-
-  #rule :cls_assign_stmt do
-  #  match(:name, '.', :name, "=", :expr) {
-  #    |cls,_,member,_,value|
-  #    ClassAccessStmt.new(cls, member, value)
-  #  }
-  #end
 end

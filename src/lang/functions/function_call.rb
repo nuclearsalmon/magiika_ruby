@@ -6,6 +6,7 @@ class FunctionCallStmt < BaseNode
 
   def initialize(name, args=[])
     @name, @args = name, args
+
     super()
   end
 
@@ -18,14 +19,21 @@ class FunctionCallStmt < BaseNode
     else
       raise Error::MismatchedType.new(section, Hash) if section.class != Hash
 
-      fn_def, param_values = FunctionUtils.find_fn(@name, @args, scope)
+      fn_def, fn_call_scope_slice = FunctionUtils.find_fn(@name, @args, scope)
 
-      # run in tmporary scope
-      result = scope.exec_scope({:@scope_type => :fn_call}) {
-        # inject parameter values into scope
-        param_values.each {|name, val| 
-          scope.set(name, val, true, false)
+      result = scope.exec_scope(fn_call_scope_slice) {
+        puts "---\n"
+        puts "calling #{@name}..."
+        scope.scopes.each {
+          |scope| 
+          puts "- #{scope[:@scope_type]}"
+          puts "  self: #{scope["self"].name}" if scope["self"] != nil
+          puts "  this: #{scope["this"].name}" if scope["this"] != nil
+          puts "  type: #{scope["type"].value}" if scope["type"] != nil
         }
+        #puts "top scope:"
+        #p scope.scopes[-1]
+        puts "---\n"
 
         # evaluate statements in scope
         next fn_def[:stmts].eval(scope)
@@ -34,7 +42,7 @@ class FunctionCallStmt < BaseNode
       # typecheck return value and ensure it's a node
       result = EmptyNode.get_default if result == nil
 
-      if !(TypeCheckSafety.type_conforms?(result, fn_def[:ret_type], scope))
+      if !(TypeSafety.type_conforms?(result, fn_def[:ret_type], scope))
         raise Error::MismatchedType.new(result, fn_def[:ret_type])
       end
 

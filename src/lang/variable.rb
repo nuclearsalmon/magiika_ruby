@@ -10,19 +10,15 @@ class DeclareVariable < BaseNode
   def initialize(type, name, object = nil)
     @type, @name, @object = type, name, object
 
-    # TODO: move this to nodesafety and use in functions and everywhere
-    if TypeUtils.valid_type?(@name)
-      raise Error::UnsupportedOperation.new(
-        "using `#{@name}' as a variable name.")
-    end
-
     super()
   end
 
   def eval(scope)
+    KeywordSafety.validate_keyword(@name)
+    
     # get default object
     if @object == nil
-      obj = TypeUtils.type_to_node_cls(@type).get_default
+      obj = TypeSafety.obj_from_typename(@type, scope)
     else
       obj = @object.eval(scope)
       
@@ -56,10 +52,10 @@ class AssignVariable < BaseNode
     obj = @object.eval(scope) #obj = @object.unwrap
     if var.type == MagicNode.type
       obj = MagicNode.new(obj)  # wrap in magic
-      scope.set(@name, obj, replace=true, retrieve=false)
+      scope.set(@name, obj, :replace)
     elsif var.type == obj.type || 
       (var.type == MagicNode.type && (var.magic_type == obj.type))
-      scope.set(@name, obj, replace=true, retrieve=false)
+      scope.set(@name, obj, :replace)
     else
       raise Error::NoSuchCast.new(obj, var)
     end
@@ -92,14 +88,17 @@ class RedeclareVariable < BaseNode
   def initialize(name, object)
     @name, @object = name, object
 
-    if TypeUtils.valid_type?(@name)
-      raise Error::UnsupportedOperation.new(
-        "using `#{@name}' as a variable name.")
-    end
     super()
   end
 
   def eval_base(scope)
+    KeywordSafety.validate_keyword(@name)
+
+    if !TypeSafety.valid_type?(@name, scope)
+      raise Error::UnsupportedOperation.new(
+        "using `#{@name}' as a variable name.")
+    end
+
     # get default object
     if @object == nil
       raise Error::UnsupportedOperation.new(

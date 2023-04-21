@@ -69,23 +69,12 @@ OBJECTS_PROC = Proc.new do
     match(:assign_var)
     match(:retrieve_var)
   end
-  
-  rule :member_access do
-    match(:name, '.', :member_access) {
-      |base,_,member|
-      MemberAccessStmt.new(base, member)
-    }
-    match(:name, '.', :member) {
-      |base,_,member|
-      MemberAccessStmt.new(base, member)
-    }
-  end
 
-  rule :chained_access do
+  rule :member_access do
     match(:member_access, '.', :member_access) {
-      |from,_,member|
-      MemberAccessStmt.new(from, member)
+      |source,_,action|
+      MemberAccessStmt.new(source, action)
     }
-    match(:member_access)
+    match(:member)
   end
 end

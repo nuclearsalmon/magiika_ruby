@@ -3,7 +3,7 @@
 require_relative './src/parsing/magiika_parser.rb'
 
 ANSI_BANNER_SIXELS_PATH = \
-  File.join(__dir__, "/resources/magiika_banner.sixels.ans")
+  File.join(__dir__, "./resources/magiika_banner.sixels.ans")
 ANSI_BANNER_SIXELS      = \
   File.open(ANSI_BANNER_SIXELS_PATH, 'rb') {|f| f.read}
 ANSI_RESET              = "\x1b[m"
@@ -148,7 +148,7 @@ if __FILE__ == $0
   else
     code = File.read(ARGV[0])
     magiika = Magiika.new
-    magiika.logger.level = Logger::DEBUG
+    #magiika.logger.level = Logger::DEBUG
     magiika.parse(code)
   end
 end
