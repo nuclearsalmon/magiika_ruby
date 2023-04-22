@@ -46,6 +46,17 @@ class AssignVariable < BaseNode
   end
 
   def eval(scope)
+    puts "\n---"
+    puts "assigning #{@name} to #{@object}..."
+    scope.scopes.each {
+      |scope| 
+      puts "- #{scope[:@scope_type]}"
+      puts "  (value): #{scope[@name].value}" if scope[@name] != nil && scope[@name].respond_to?(:value)
+    }
+    #puts "top scope:"
+    #p scope.scopes[-1]
+    puts "---\n\n"
+
     var = scope.get(@name)
     raise Error::Magiika.new("undefined variable `#{@name}'.") if var == nil
 
@@ -77,7 +88,7 @@ class RetrieveVariable < BaseNode
   end
 
   def output(scope)
-    return scope.get(@name)
+    return eval(scope)
   end
 end
 

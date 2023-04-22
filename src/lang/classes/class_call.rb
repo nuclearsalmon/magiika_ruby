@@ -9,43 +9,74 @@ class MemberAccessStmt < TypeNode
     super()
   end
 
-  def unwrap_eval_old(scope)
-    obj = @source.eval(scope).unwrap_all()
-    
-    if !obj.respond_to?(:run)
-      raise Error::UnsupportedOperation.new(
-        "`#{obj.type}'does not respond to member calls.")
-    end
-    
-    return obj.run(@action, scope)
-  end
-
   def unwrap_eval(scope)
     src_obj = @source.eval(scope).unwrap_all()
     
-    if !src_obj.respond_to?(:run)
-      raise Error::UnsupportedOperation.new(
-        "`#{src_obj.type}'does not respond to member calls.")
-    end
-
-    result = nil
-    if @action.class <= MemberAccessStmt
-      puts "resolving obj ..."
-      action = @action
-      while action.class <= MemberAccessStmt
-        src_obj = src_obj.run(action, scope)
-        action = action.action
+    action = @action
+    while action.class <= MemberAccessStmt
+      if !src_obj.respond_to?(:run)
+        raise Error::UnsupportedOperation.new(
+          "`#{src_obj.type}' does not support entering its scope.")
       end
 
-      result = src_obj
-    else
-      puts "running obj ..."
-      result = src_obj.run(@action, scope)
+      src_obj = src_obj.run(action.source, scope)
+      action = action.action
     end
 
-    puts "final result:"
-    p result
-    return result
+    return src_obj.run(action, scope)
+  end
+
+  def eval(scope)
+    return unwrap_eval(scope).eval(scope)
+  end
+
+  def bool_eval?(scope)
+    return unwrap_eval(scope).bool_eval?(scope)
+  end
+
+  def output(scope)
+    return unwrap_eval(scope).output(scope)
+  end
+end
+
+
+class MemberAssignStmt < TypeNode
+  def initialize(access, value)
+    @access, @value = access, value
+
+    super()
+  end
+
+  def unwrap_eval(scope)
+    if !(@access.class <= MemberAccessStmt)
+      raise Error::Magiika.new(
+        "@action should always be a MemberAccessStmt: #{@action.class}")
+    end
+    
+    src_obj = @access.source.eval(scope).unwrap_all()
+    action = @access.action
+    while action.class <= MemberAccessStmt
+      if !src_obj.respond_to?(:run)
+        raise Error::UnsupportedOperation.new(
+          "`#{src_obj.type}' does not support entering its scope.")
+      end
+
+      src_obj = src_obj.run(action.source, scope)
+      action = action.action
+    end
+
+    if action.class <= RetrieveVariable
+      var_name = action.name
+      # important, otherwise we end up with uneval'd assignments
+      value    = @value.eval(scope)
+      
+      src_obj.set(var_name, value, scope)
+    else
+      raise Error::Magiika.new(
+        "Action #{action.class} cannot be used for variable assignment.")
+    end
+
+    return src_obj.run(action, scope)
   end
 
   def eval(scope)

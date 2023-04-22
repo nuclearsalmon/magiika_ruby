@@ -12,9 +12,9 @@ class ClassNode < TypeNode
     @parent_cls_name      = parent_cls_name
     
     @defined            = false
-    @cls_scope          = {:@scope_type => :cls}
+    @cls_scope          = {:@scope_type => :cls_base}
     @inst_stmts         = []
-    @constructor_scope  = {:@scope_type => :cls_constructors}
+    @constructor_scope  = {:@scope_type => :cls_init}
     # no super() - no freeze
   end
 
@@ -96,7 +96,7 @@ class ClassNode < TypeNode
 
     # FIXME SAFEGUARD AGAINST SETTING NEW VARIABLES
     return scope.exec_scope(@cls_scope) {
-      next scope.set(name, value, replace=true, retrieve=false)
+      next scope.set(name, value, :replace)
     }
   end
 
@@ -105,7 +105,7 @@ class ClassNode < TypeNode
 
     scopes = [
       @cls_scope,
-      {:@scope_type => :fn_call, "this" => self}
+      {:@scope_type => :cls_ref, "this" => self}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -113,13 +113,12 @@ class ClassNode < TypeNode
     }
   end
 
-  def run(scope, stmt)
+  def run(stmt, scope)
     define(scope)
 
     scopes = [
-      {:@scope_type => :begin},
       @cls_scope,
-      {:@scope_type => :end, "this" => self}
+      {:@scope_type => :cls_run, "this" => self}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -160,7 +159,7 @@ class ClassInstanceNode < TypeNode
       @cls.cls_scope,
       @instance_scope,
       @cls.constructor_scope,
-      {:@scope_type => :fn_call_constructor, "self" => self, "this" => @cls}
+      {:@scope_type => :cls_ref, "self" => self, "this" => @cls}
     ]
 
     scope.exec_scopes(scopes) {
@@ -205,7 +204,7 @@ class ClassInstanceNode < TypeNode
     ]
 
     return scope.exec_scopes(scopes) {
-      next scope.set(name, value, replace=true, retrieve=false)
+      next scope.set(name, value, :replace)
     }
   end
 
@@ -213,7 +212,7 @@ class ClassInstanceNode < TypeNode
     scopes = [
       @cls.cls_scope,
       @instance_scope,
-      {:@scope_type => :fn_call, "self" => self, "this" => @cls}
+      {:@scope_type => :cls_ref, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {
@@ -223,10 +222,9 @@ class ClassInstanceNode < TypeNode
 
   def run(stmt, scope)
     scopes = [
-      {:@scope_type => :begin},
       @cls.cls_scope,
       @instance_scope,
-      {:@scope_type => :end, "self" => self, "this" => @cls}
+      {:@scope_type => :cls_run, "self" => self, "this" => @cls}
     ]
 
     return scope.exec_scopes(scopes) {

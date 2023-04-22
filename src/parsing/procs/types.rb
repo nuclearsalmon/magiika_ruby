@@ -4,14 +4,12 @@
 # ------------------------------------------------------------------------------
 TYPES_PROC = Proc.new do
   rule :name do
-    match(/([A-Za-z][A-Za-z_0-9]*)/)
+    match(/([A-Za-z_][A-Za-z_0-9]*)/)
   end
   
   rule :value do
     match(:literal)
     match(:member_access)
-    match(:fn_call)
-    match(:retrieve_var)
     match("(", :cond, ")")      {|_,cond,_| cond}
   end
   
@@ -23,23 +21,8 @@ TYPES_PROC = Proc.new do
     match(:str)
   end
 
-  rule :built_in_type do
-    match("empty")
-    match("magic")
-    match("bool")
-    match("flt")
-    match("int")
-    match("str")
-    match("lst")
-  end
-
-  rule :type do
-    match(:built_in_type)
-    match(:name)
-  end
-
   rule :type_ident do
-    match(:type, ':')           {|type,_| type}
+    match(:name, ':')           {|type,_| type}
     match(':')                  {"magic"}
   end
 

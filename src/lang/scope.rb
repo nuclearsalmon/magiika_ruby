@@ -8,10 +8,12 @@ class Scope
     @scopes = [{:@scope_type => :global}]
   end
 
+  SEPARATOR_SCOPE_SLICE = {:@scope_type => :"---"}.freeze
+  FN_QUERY_SCOPE_SLICE  = {:@scope_type => :fn_query}.freeze
+
   # ⭐ PROTECTED
   # --------------------------------------------------------
   protected
-
 
   # access_scope
   #  name   (string)  : Key.
@@ -50,15 +52,18 @@ class Scope
         "Retrieval only uses the `:default` mode. Requested mode: `#{mode}`")
     end
 
-    cls_scope_types = [
-      :cls,
-      :cls_constructors,
+    do_skip = @scopes[-1][:@scope_type] == :fn_query
+    skip_scope_types = [
+      :cls_base,
       :cls_inst,
+      :cls_init,
+      :cls_ref,
     ]
 
     @scopes.reverse_each {
       |scope|
       next if scope[name] == nil
+      next if do_skip && skip_scope_types.include?(scope[:@scope_type])
       
       if value != nil    # assignment
         case mode
@@ -125,21 +130,16 @@ class Scope
   # ✨ Scope extension
   # --------------------------------------------------------
 
-  def exec_tmp_scope(type=:temporary, &block)
-    begin
-      @scopes << {:@scope_type => type}
-      block.call
-    ensure
-      @scopes.delete_at(-1)
-    end
-  end
-
   def exec_scope(scope, &block)
     result = nil
     begin
+      @scopes << SEPARATOR_SCOPE_SLICE
+
       @scopes << scope
       result = block.call
     ensure
+      @scopes.delete_at(-1)
+
       @scopes.delete_at(-1)
     end
     return result
@@ -148,10 +148,14 @@ class Scope
   def exec_scopes(scopes, &block)
     result = nil
     begin
+      @scopes << SEPARATOR_SCOPE_SLICE
+
       scopes.each {|scope| @scopes << scope}
       result = block.call
     ensure
       scopes.each {@scopes.delete_at(-1)}
+
+      @scopes.delete_at(-1)
     end
     return result
   end

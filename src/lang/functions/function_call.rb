@@ -22,7 +22,7 @@ class FunctionCallStmt < BaseNode
       fn_def, fn_call_scope_slice = FunctionUtils.find_fn(@name, @args, scope)
 
       result = scope.exec_scope(fn_call_scope_slice) {
-        puts "---\n"
+        puts "\n---\n"
         puts "calling #{@name}..."
         scope.scopes.each {
           |scope| 
@@ -33,7 +33,7 @@ class FunctionCallStmt < BaseNode
         }
         #puts "top scope:"
         #p scope.scopes[-1]
-        puts "---\n"
+        puts "---\n\n"
 
         # evaluate statements in scope
         next fn_def[:stmts].eval(scope)

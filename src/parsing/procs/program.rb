@@ -8,10 +8,9 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :eol do
-    match(:eol_tok, :eol)       
-    match(:eol_mark, :eol)      
-    match(:eol_tok)             
-    match(:eol_mark)            
+    match(:eol, :eol)
+    match(:eol_tok)
+    match(:eol_mark)
   end
 
   rule :stmts do
@@ -31,9 +30,9 @@ PROGRAM_PROC = Proc.new do
 
     match(:fn_def)
 
-    match(:declare_var)
-    match(:assign_var)
+    match(:member_assign)
     match(:reassign_var)
+    match(:declare_var)
 
     match(:cond)
   end

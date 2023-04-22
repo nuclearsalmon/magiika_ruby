@@ -97,7 +97,9 @@ module FunctionUtils
         raise Error::AlreadyDefined.new("Argument #{arg_name}")
       end
 
-      arg_value = arg_value.eval(scope)
+      arg_value = scope.exec_scope(Scope::FN_QUERY_SCOPE_SLICE) {
+        next arg_value.eval(scope)
+      }
 
       # check param type matches arg type
       if !(param[:type] == "magic" || \
@@ -125,14 +127,7 @@ module FunctionUtils
     }
 
     # eval all values
-    fn_call_scope.each {|name,value|
-      fn_call_scope[name] = value.eval(scope)
-      puts "-----"
-      p name
-      p value
-      p fn_call_scope[name]
-      puts "-----"
-    }
+    fn_call_scope.each {|name,value| fn_call_scope[name] = value.eval(scope)}
 
     # set scope type
     fn_call_scope[:@scope_type] = :fn_call
