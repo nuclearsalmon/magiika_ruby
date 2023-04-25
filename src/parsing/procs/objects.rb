@@ -10,22 +10,22 @@ OBJECTS_PROC = Proc.new do
   rule :magic_declare_var do
     match(":", :name, "=", :cond) {
       |_,name,_,value| 
-      DeclareVariable.new("magic", name, value)
+      DeclareVariableStmt.new("magic", name, value)
     }
     match(":", :name) {
       |_,name| 
-      DeclareVariable.new("magic", name)
+      DeclareVariableStmt.new("magic", name)
     }
   end
 
   rule :typed_declare_var do
     match(:name, ":", :name, "=", :expr) {
       |type,_,name,_,value| 
-      DeclareVariable.new(type, name, value)
+      DeclareVariableStmt.new(type, name, value)
     }
     match(:name, ":", :name) {
       |type,_,name|
-      DeclareVariable.new(type, name)
+      DeclareVariableStmt.new(type, name)
     }
   end
 
@@ -41,7 +41,7 @@ OBJECTS_PROC = Proc.new do
   rule :assign_var do
     match(:name, "=", :expr) {
       |name,_,value|
-      AssignVariable.new(name, value)
+      AssignVariableStmt.new(name, value)
     }
   end
 
@@ -51,7 +51,7 @@ OBJECTS_PROC = Proc.new do
     #        This is temporary just for testing purposes.
     match(:name, ":=", :expr) {
       |name,_,value| 
-      RedeclareVariable.new(name, value)
+      ReassignVariableStmt.new(name, value)
     }
   end
 
@@ -62,7 +62,7 @@ OBJECTS_PROC = Proc.new do
 
   rule :retrieve_var do
     match(:eol)  {nil}  # this is a hack but it fixes :name matching :eol variants
-    match(:name) {|name| RetrieveVariable.new(name)}
+    match(:name) {|name| RetrieveVariableStmt.new(name)}
   end
 
 
@@ -83,10 +83,10 @@ OBJECTS_PROC = Proc.new do
   end
 
   rule :member_assign do
+    match(:assign_var)
     match(:member_access, "=", :expr) {
       |access,_,value|
       MemberAssignStmt.new(access, value)
     }
-    match(:assign_var)
   end
 end

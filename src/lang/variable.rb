@@ -4,23 +4,24 @@
 # ✨ BUILT-IN VARIABLES
 # ------------------------------------------------------------------------------
 
-class DeclareVariable < BaseNode
-  attr_reader :type, :name
+class DeclareVariableStmt < BaseNode
+  attr_reader :type, :name, :value
+  attr_accessor :const
 
-  def initialize(type, name, object = nil)
-    @type, @name, @object = type, name, object
-
-    super()
+  def initialize(type, name, value = nil, const = false)
+    @type, @name, @value = type, name, value
+    @const = const
+    # Don't freeze, ConstStmt must be able to modify const flag.
   end
 
   def eval(scope)
     KeywordSafety.validate_keyword(@name)
     
     # get default object
-    if @object == nil
+    if @value == nil
       obj = TypeSafety.obj_from_typename(@type, scope)
     else
-      obj = @object.eval(scope)
+      obj = @value.eval(scope)
       
       if @type == MagicNode.type && obj.class != MagicNode
         obj = MagicNode.new(obj)  # wrap in magic
@@ -30,6 +31,8 @@ class DeclareVariable < BaseNode
       end
     end
     
+    obj = ConstNode.new(obj) if @const
+
     scope.add(@name, obj)
     
     return obj
@@ -37,7 +40,7 @@ class DeclareVariable < BaseNode
 end
 
 
-class AssignVariable < BaseNode
+class AssignVariableStmt < BaseNode
   attr_reader :name
 
   def initialize(name, object = nil)
@@ -64,8 +67,8 @@ class AssignVariable < BaseNode
     if var.type == MagicNode.type
       obj = MagicNode.new(obj)  # wrap in magic
       scope.set(@name, obj, :replace)
-    elsif var.type == obj.type || 
-      (var.type == MagicNode.type && (var.magic_type == obj.type))
+    elsif var.type == obj.type || \
+        (var.type == MagicNode.type && (var.magic_type == obj.type))
       scope.set(@name, obj, :replace)
     else
       raise Error::NoSuchCast.new(obj, var)
@@ -75,7 +78,7 @@ class AssignVariable < BaseNode
 end
 
 
-class RetrieveVariable < BaseNode
+class RetrieveVariableStmt < BaseNode
   attr_reader :name
 
   def initialize(name)
@@ -93,7 +96,7 @@ class RetrieveVariable < BaseNode
 end
 
 
-class RedeclareVariable < BaseNode
+class ReassignVariableStmt < BaseNode
   attr_reader :name
 
   def initialize(name, object)

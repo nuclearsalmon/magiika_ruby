@@ -27,6 +27,10 @@ CLASSES_PROC = Proc.new do
     match("abst")                       {:abstract}
   end
 
+  rule :const do
+    match("const")                      {:const}
+  end
+
 
   # ✨ CLASSES 
   # ----------------------------------------------------------------------------
@@ -51,7 +55,11 @@ CLASSES_PROC = Proc.new do
     match(:static, :fn_def)       {|_,fn_def| StaticNode.new(fn_def)}
     match(:fn_def)
 
+    match(:static, :const, :declare_var)  {|_,_,stmt| StaticNode.new(ConstNode.new(stmt))}
+    match(:const, :static, :declare_var)  {|_,_,stmt| StaticNode.new(ConstNode.new(stmt))}
     match(:static, :declare_var)  {|_,stmt| StaticNode.new(stmt)}
+    
+    match(:const, :declare_var)   {|_,stmt| ConstStmt.new(stmt)}
     match(:declare_var)
 
     match(:eol)

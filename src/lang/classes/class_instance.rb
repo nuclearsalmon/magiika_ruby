@@ -38,8 +38,8 @@ class ClassNode < TypeNode
         raise Error::MismatchedType(parent, ClassDefStmt)
       end
 
-      @cls_scope   = parent.cls_scope.clone   # shallow
-      @inst_stmts     = parent.inst_stmts.clone     # shallow
+      @cls_scope  = parent.cls_scope.clone  # shallow
+      @inst_stmts = parent.inst_stmts.clone # shallow
     end
 
     @stmts.each {
@@ -49,7 +49,9 @@ class ClassNode < TypeNode
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
       elsif stmt.class <= ClassDefStmt
         scope.exec_scope(@cls_scope) { stmt.eval(scope) }
-      elsif stmt.class <= StaticNode
+      elsif stmt.unwrap_contains_class?(StaticNode)
+        # Remove the static property, we will put it into a
+        # separate scope to signal that instead.
         unstatic_stmt = stmt.unwrap()
 
         if (unstatic_stmt.name == "init") # transform to constructor
@@ -62,7 +64,7 @@ class ClassNode < TypeNode
             ConstructorDefStmt.new(unstatic_stmt.params, unstatic_stmt.stmts).eval(scope)
           }
         else
-          scope.exec_scope(@cls_scope) { stmt.eval(scope) }
+          scope.exec_scope(@cls_scope) { unstatic_stmt.eval(scope) }
         end
       else
         @inst_stmts << stmt
@@ -94,8 +96,11 @@ class ClassNode < TypeNode
   def set(name, value, scope)
     define(scope)
 
-    # FIXME SAFEGUARD AGAINST SETTING NEW VARIABLES
     return scope.exec_scope(@cls_scope) {
+      if !scope.exist(name)
+        raise Error::UnsupportedOperation.new('You cannot add members to a defined class.')
+      end
+
       next scope.set(name, value, :replace)
     }
   end

@@ -6,26 +6,37 @@ require_relative './operators.rb'
 
 module TypeNodeSafety
   def verify_class(obj)
-    if obj.class != self.class
-      raise Error::MismatchedType.new(obj, self)
+    if !(obj.class <= self.class)
+      raise Error::MismatchedType.new(self, obj)
     end
   end
 
   def verify_classes(obj, ok_classes)
-    if !(obj.class == self.class or ok_classes.include?(obj.class))
-      raise Error::MismatchedType.new(obj, self)
-    end
+    return if obj.class <= self.class
+    ok = false
+    ok_classes.each {
+      |cls|
+      puts "-v-"
+      p obj
+      p cls
+      res = obj.class <= cls
+      p res
+      puts "---"
+      ok = true if obj.class <= cls
+      return if ok
+    }
+    raise Error::MismatchedType.new(self, obj) if !ok
   end
 
   def verify_type(obj)
     if obj.type != self.type
-      raise Error::MismatchedType.new(obj, self)
+      raise Error::MismatchedType.new(self, obj)
     end
   end
 
   def verify_types(obj, ok_types)
     if obj.type != self.type or !ok_types.include?(obj.type)
-      raise Error::MismatchedType.new(obj, self)
+      raise Error::MismatchedType.new(self, obj)
     end
   end
 end
@@ -47,7 +58,7 @@ class EmptyNode < TypeNode
   end
 
   def self.type
-    return "empty"
+    return 'empty'
   end
 end
 
@@ -78,7 +89,7 @@ class IntNode < ContainerTypeNode
   end
 
   def self.type
-    return "int"
+    return 'int'
   end
 
   def to_bytes
@@ -187,7 +198,7 @@ class FltNode < ContainerTypeNode
   end
 
   def self.type
-    return "flt"
+    return 'flt'
   end
 
   def to_bytes
@@ -297,7 +308,7 @@ class BoolNode < ContainerTypeNode
   end
 
   def self.type
-    return "bool"
+    return 'bool'
   end
 
   def to_bytes
@@ -332,11 +343,11 @@ class StrNode < ContainerTypeNode
   end
 
   def self.get_default
-    return StrNode.new("")
+    return StrNode.new('')
   end
 
   def bool_eval?(scope)
-    return @value != ""
+    return @value != ''
   end
 
   def output(scope)
@@ -344,7 +355,7 @@ class StrNode < ContainerTypeNode
   end
 
   def self.type
-    return "str"
+    return 'str'
   end
 
   def +(other=nil)
@@ -358,7 +369,7 @@ class StrNode < ContainerTypeNode
     # Unpack to 8-bit unsigned integers because signed integers are completely
     # goddamn unreadable to any normal person. 8-bit because
     # there's rarely any need for 16-bit here, this is most likely just
-    return @value.unpack("C*")
+    return @value.unpack('C*')
   end
 end
 
@@ -366,9 +377,9 @@ end
 class MagicNode < ContainerTypeNode
   def initialize(value)
     if !(value.class < TypeNode)
-      raise Error::Magiika.new("a MagicNode must be instansiated with a TypeNode.")
+      raise Error::Magiika.new('a MagicNode must be instansiated with a TypeNode.')
     elsif value.class <= MagicNode
-      raise Error::Magiika.new("a MagicNode cannot contain another MagicNode.")
+      raise Error::Magiika.new('a MagicNode cannot contain another MagicNode.')
     end
     super(value)
   end
@@ -389,11 +400,7 @@ class MagicNode < ContainerTypeNode
     return @value.output(scope)
   end
 
-  def unwrap
-    return @value
-  end
-
   def self.type
-    return "magic"
+    return 'magic'
   end
 end

@@ -32,6 +32,7 @@ PROGRAM_PROC = Proc.new do
 
     match(:member_assign)
     match(:reassign_var)
+    match(:const, :declare_var) {|_,stmt| ConstStmt.new(stmt)}
     match(:declare_var)
 
     match(:cond)

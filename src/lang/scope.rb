@@ -15,23 +15,36 @@ class Scope
   # --------------------------------------------------------
   protected
 
+  def verify_not_const(scope, name) 
+    if scope[name].class <= TypeNode
+      p scope[name].unwrap_classes_to_list
+      if scope[name].unwrap_contains_class?(ConstNode)
+        raise Error::UnsupportedOperation.new(\
+          "You cannot modify a const variable. Attepted to modify `#{name}'")
+      end
+    end
+  end
+
   # access_scope
-  #  name   (string)  : Key.
-  #  value  (any/nil) : Value to assign to key.
-  #  mode   (symbol)  : The mode to operate in.
-  #  - `:default`     :  Error if  already defined,
-  #                       do not replace.
-  #                       Does nothing when `value=nil`.
-  #  - `:replace`     :  Replace if already defined.
-  #                       Errors when `value=nil`.
-  #  - `:retrieve`    :  Return obj if already defined,
-  #                       do not replace.
-  #                       Errors when `value=nil`.
-  #  - `:push`        :  Push to top of scopestack, error if
-  #                       already defined in top scopestack.
+  #  name     (string)  : Key.
+  #  value    (any/nil) : Value to assign to key.
+  #  mode     (symbol)  : The mode to operate in.
+  #  - `:default`       :  Error if  already defined,
+  #                         do not replace.
+  #                         Does nothing when `value=nil`.
+  #  - `:replace`       :  Replace if already defined.
+  #                         Errors when `value=nil`.
+  #  - `:retrieve`      :  Return obj if already defined,
+  #                         do not replace.
+  #                         Errors when `value=nil`.
+  #  - `:push`          :  Push to top of scopestack, error if
+  #                         already defined in top scopestack.
+  #  ignore_const (bool): Allow setting objects even when 
+  #                        they're marked as const.
   def access_scope(name,
                    value=nil,
-                   mode=:default)
+                   mode=:default,
+                   ignore_const=false)
     #puts "Access `#{name}` in `#{mode}` mode, with value:"
     #p value
     #puts "\n"
@@ -70,9 +83,11 @@ class Scope
         when :default
           raise Error::AlreadyDefined.new(name)
         when :replace
+          verify_not_const(scope, name) if !ignore_const 
           scope[name] = value
           return value
         when :retrieve
+          verify_not_const(scope, name) if !ignore_const 
           return scope[name]
         else
           raise Error::Magiika.new("Undefined mode: `#{mode}`")
@@ -120,11 +135,11 @@ class Scope
   end
 
   def get(name)
-    return access_scope(name)
+    return access_scope(name).unwrap_only_class(ConstNode)
   end
 
   def get_smart_get(name, obj)
-    return access_scope(name, obj, :retrieve)
+    return access_scope(name, obj, :retrieve).unwrap_only_class(ConstNode)
   end
 
   # ✨ Scope extension

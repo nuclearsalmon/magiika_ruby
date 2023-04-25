@@ -65,7 +65,7 @@ class MemberAssignStmt < TypeNode
       action = action.action
     end
 
-    if action.class <= RetrieveVariable
+    if action.class <= RetrieveVariableStmt
       var_name = action.name
       # important, otherwise we end up with uneval'd assignments
       value    = @value.eval(scope)

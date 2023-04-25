@@ -10,20 +10,35 @@ TYPES_PROC = Proc.new do
   rule :value do
     match(:literal)
     match(:member_access)
-    match("(", :cond, ")")      {|_,cond,_| cond}
+    match('(', :cond, ')')      {|_,cond,_| cond}
   end
   
   rule :literal do
-    match("empty")              {EmptyNode.new}
+    match('empty')              {EmptyNode.new}
     match(:flt)
     match(:int)
     match(:bool)
     match(:str)
   end
 
+  rule :built_in_type do
+    match('empty')
+    match('magic')
+    match('bool')
+    match('flt')
+    match('int')
+    match('str')
+    match('lst')
+  end
+
+  rule :type do
+    match(:built_in_type)
+    match(:name)
+  end
+
   rule :type_ident do
-    match(:name, ':')           {|type,_| type}
-    match(':')                  {"magic"}
+    match(:type, ':')           {|type,_| type}
+    match(':')                  {'magic'}
   end
 
   rule :flt do

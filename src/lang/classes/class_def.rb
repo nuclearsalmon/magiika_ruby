@@ -3,19 +3,44 @@
 
 class StaticNode < ContainerTypeNode
   def eval(scope)
-    return @value.eval(scope)
-  end
-
-  def bool_eval?(scope)
-    return @value != EmptyNode.get_default
-  end
-
-  def output(scope)
-    return @value.output(scope)
+    raise Error::Magiika.new(\
+      'StaticNodes are not meant to be evaluated, they are meant to be unwrapped.')
   end
 
   def self.type
-    return "static"
+    return 'static'
+  end
+end
+
+
+class ConstNode < ContainerTypeNode
+  def eval(scope)
+    return @value.eval(scope)
+  end
+
+  def self.type
+    return 'const'
+  end
+
+  def eval(scope)
+    return unwrap().eval(scope)
+  end
+end
+
+
+class ConstStmt < ConstNode
+  def initialize(stmt)
+    if stmt.class <= DeclareVariableStmt
+      stmt.const = true  # set flag
+    else
+      raise Error::Magiika.new(\
+        'ConstNodes should only be initialized with a variable declaration statement.')
+    end
+    super(stmt)
+  end
+
+  def eval(scope)
+    return unwrap().eval(scope)
   end
 end
 
@@ -39,7 +64,7 @@ class ConstructorDefStmt < FunctionDefStmt
     # inject return
     stmts = StmtsNode.new(
       stmts.unwrap.concat(
-        [ReturnStmtNode.new(RetrieveVariable.new("self"))]
+        [ReturnStmtNode.new(RetrieveVariableStmt.new("self"))]
       )
     )
     
