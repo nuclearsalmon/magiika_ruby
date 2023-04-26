@@ -217,11 +217,10 @@ class ContainerTypeNode < TypeNode
     super()
   end
 
-  def unwrap
-    return @value
-  end
-
   # will break on non TypeNode values
+  #def unwrap
+  #  return @value
+  #end
   #def method_missing(method_name, *args, &block)
   #  @value.public_send(method_name, *args, &block)
   #end

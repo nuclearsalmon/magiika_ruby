@@ -7,6 +7,10 @@ class StaticNode < ContainerTypeNode
       'StaticNodes are not meant to be evaluated, they are meant to be unwrapped.')
   end
 
+  def unwrap
+    return @value
+  end
+
   def self.type
     return 'static'
   end
@@ -16,6 +20,10 @@ end
 class ConstNode < ContainerTypeNode
   def eval(scope)
     return @value.eval(scope)
+  end
+
+  def unwrap
+    return @value
   end
 
   def self.type
@@ -37,6 +45,10 @@ class ConstStmt < ConstNode
         'ConstNodes should only be initialized with a variable declaration statement.')
     end
     super(stmt)
+  end
+
+  def unwrap
+    return @value
   end
 
   def eval(scope)

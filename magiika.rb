@@ -106,7 +106,6 @@ class Magiika
         begin
           stmts = @parser.parse(input)
           result = stmts.eval(@scope)
-          
         rescue Error::Magiika => error
           raise error if !@error_rescueing
           

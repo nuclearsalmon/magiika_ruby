@@ -44,6 +44,9 @@ class ClassNode < TypeNode
 
     @stmts.each {
       |stmt|
+      puts "cls stmt:"
+      p stmt
+      puts "\n"
       
       if stmt.class <= ConstructorDefStmt
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
@@ -61,7 +64,8 @@ class ClassNode < TypeNode
           end
 
           scope.exec_scope(@constructor_scope) { 
-            ConstructorDefStmt.new(unstatic_stmt.params, unstatic_stmt.stmts).eval(scope)
+            new_stmt = ConstructorDefStmt.new(unstatic_stmt.params, unstatic_stmt.stmts)
+            new_stmt.eval(scope)
           }
         else
           scope.exec_scope(@cls_scope) { unstatic_stmt.eval(scope) }
@@ -131,9 +135,8 @@ class ClassNode < TypeNode
     }
   end
 
-
   def self.type
-    return "cls"
+    return 'cls'
   end
 
   def type
@@ -238,7 +241,7 @@ class ClassInstanceNode < TypeNode
   end
 
   def self.type
-    return "cls"
+    return 'cls'
   end
 
   def type

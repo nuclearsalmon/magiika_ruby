@@ -22,19 +22,6 @@ class FunctionCallStmt < BaseNode
       fn_def, fn_call_scope_slice = FunctionUtils.find_fn(@name, @args, scope)
 
       result = scope.exec_scope(fn_call_scope_slice) {
-        puts "\n---\n"
-        puts "calling #{@name}..."
-        scope.scopes.each {
-          |scope| 
-          puts "- #{scope[:@scope_type]}"
-          puts "  self: #{scope["self"].name}" if scope["self"] != nil
-          puts "  this: #{scope["this"].name}" if scope["this"] != nil
-          puts "  type: #{scope["type"].value}" if scope["type"] != nil
-        }
-        #puts "top scope:"
-        #p scope.scopes[-1]
-        puts "---\n\n"
-
         # evaluate statements in scope
         next fn_def[:stmts].eval(scope)
       }

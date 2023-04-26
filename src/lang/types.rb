@@ -16,12 +16,6 @@ module TypeNodeSafety
     ok = false
     ok_classes.each {
       |cls|
-      puts "-v-"
-      p obj
-      p cls
-      res = obj.class <= cls
-      p res
-      puts "---"
       ok = true if obj.class <= cls
       return if ok
     }
@@ -157,7 +151,7 @@ class IntNode < ContainerTypeNode
     verify_classes(other, [FltNode, ])
 
     if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
-      raise Error::MismatchedType.new("`#{self}', `#{other}'.")
+      raise Error::MismatchedType.new([self, other], ContainerTypeNode)
     end
     
     value = @value.to_f.public_send(:/, other.value).truncate.to_i
@@ -270,7 +264,7 @@ class FltNode < ContainerTypeNode
     verify_classes(other, [IntNode, ])
 
     if !(other.class <= ContainerTypeNode and self.class <= ContainerTypeNode)
-      raise Error::MismatchedType.new("`#{self}', `#{other}'.")
+      raise Error::MismatchedType.new([self, other], ContainerTypeNode)
     end
     
     value = @value.to_f.public_send(:/, other.value).truncate.to_f
@@ -394,6 +388,10 @@ class MagicNode < ContainerTypeNode
 
   def bool_eval?(scope)
     return @value != EmptyNode.get_default
+  end
+
+  def unwrap
+    return @value
   end
 
   def output(scope)

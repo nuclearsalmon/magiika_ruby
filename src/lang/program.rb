@@ -21,9 +21,8 @@ class StmtsNode < BaseNode
       
       tmp_result = stmt.eval(scope)
       
-      if stmt.class <= ReturnStmtNode
-        result = tmp_result
-        result = EmptyNode.get_default if result == nil
+      if stmt.class <= ReturnStmtNode || @stmts.length == 1
+        result = tmp_result == nil ? EmptyNode.get_default : tmp_result
         break
       end
     }
@@ -112,6 +111,10 @@ class BinaryExpressionNode < BaseNode
       raise Error::UnsupportedOperation.new(
         "`#{@l.type}' does not support `#{@op}'.")
     end
+  end
+
+  def bool_eval?(scope)
+    return eval(scope).bool_eval?(scope)
   end
 end
 

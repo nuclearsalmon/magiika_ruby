@@ -25,6 +25,7 @@ PROGRAM_PROC = Proc.new do
 
     match(:if_stmt)
     match(:while_stmt)
+    match(:return_stmt)
 
     match(:cls_def)
 
@@ -36,6 +37,11 @@ PROGRAM_PROC = Proc.new do
     match(:declare_var)
 
     match(:cond)
+  end
+  
+  rule :oneline_stmt do
+    match(:eol, :stmt)          {|_,stmt| stmt}
+    match(:stmt)
   end
   
   rule :stmts_block do
@@ -72,11 +78,11 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :if_stmt do
-    match("if", :cond, ":", :stmt, :elif_stmt) {
+    match("if", :cond, ":", :oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, else_stmt=elif)
     }
-    match("if", :cond, ":", :stmt) {
+    match("if", :cond, ":", :oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
@@ -92,11 +98,11 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :elif_stmt do
-    match(:elif_keyword, :cond, ":", :stmt, :elif_stmt) {
+    match(:elif_keyword, :cond, ":", :oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, elif_else=elif)
     }
-    match(:elif_keyword, :cond, ":", :stmt) {
+    match(:elif_keyword, :cond, ":", :oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
@@ -114,7 +120,7 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :else_stmt do
-    match(:else_keyword, ":", :stmt) {
+    match(:else_keyword, ":", :oneline_stmt) {
       |_,_,stmt|
       cond = BoolNode.new(true)  # always eval to true
       IfNode.new(cond, stmt)
@@ -128,7 +134,7 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :while_stmt do
-    match("while", :cond, ":", :stmt) {
+    match("while", :cond, ":", :oneline_stmt) {
       |_,cond,_,stmt|
       WhileNode.new(cond, stmt)
     }

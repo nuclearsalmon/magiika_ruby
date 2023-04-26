@@ -17,7 +17,6 @@ class Scope
 
   def verify_not_const(scope, name) 
     if scope[name].class <= TypeNode
-      p scope[name].unwrap_classes_to_list
       if scope[name].unwrap_contains_class?(ConstNode)
         raise Error::UnsupportedOperation.new(\
           "You cannot modify a const variable. Attepted to modify `#{name}'")
@@ -75,9 +74,15 @@ class Scope
 
     @scopes.reverse_each {
       |scope|
+      #puts "---"
+      #p name
+      #p mode
+      #p scope[name]
+      #p scope
+      #puts "---"
       next if scope[name] == nil
       next if do_skip && skip_scope_types.include?(scope[:@scope_type])
-      
+
       if value != nil    # assignment
         case mode
         when :default
@@ -102,6 +107,7 @@ class Scope
       @scopes[-1][name] = value
       return value
     else                  # retrieval
+      p @scopes
       raise Error::UndefinedVariable.new(name)
     end
   end
@@ -135,11 +141,19 @@ class Scope
   end
 
   def get(name)
-    return access_scope(name).unwrap_only_class(ConstNode)
+    result = access_scope(name)
+    if result.class <= TypeNode
+      result = result.unwrap_only_class(ConstNode)
+    end
+    return result
   end
 
   def get_smart_get(name, obj)
-    return access_scope(name, obj, :retrieve).unwrap_only_class(ConstNode)
+    result = access_scope(name, obj, :retrieve)
+    if result.class <= TypeNode
+      result = result.unwrap_only_class(ConstNode)
+    end
+    return result
   end
 
   # ✨ Scope extension
@@ -194,7 +208,7 @@ class Scope
   #                       Errors when `value=nil`.
   def section_set(name, key, definition=nil, mode=:default)
     section = access_scope(name, Hash.new, :retrieve)
-    raise Error::MismatchedType.new(section, Hash) if !section.instance_of?(Hash)
+    raise Error::MismatchedType.new(section, Hash) if !section.class == Hash
 
     if key == nil             # section instead of section item
       if definition != nil
