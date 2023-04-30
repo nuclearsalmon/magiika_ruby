@@ -64,11 +64,11 @@ class BooleanInverterNode < BaseNode
   end
 
   def eval(scope)
-    return BoolNode.new(!(@value.bool_eval?(scope))).eval(scope)
+    return BoolNode.new(!(@value.bool_eval?(scope)))
   end
 
   def bool_eval?(scope)
-    return BoolNode.new(!(@value.bool_eval?(scope))).bool_eval?(scope)
+    return !(@value.bool_eval?(scope))
   end
 
   def output(scope)
@@ -84,14 +84,12 @@ class UnaryExpressionNode < BaseNode
   end
 
   def eval(scope)
-    obj = @obj.eval(scope).unwrap_all
+    l = @obj.eval(scope)#.unwrap_all
+    l.ext_call(@op, scope)
+  end
 
-    if obj.class.method_defined?(@op)
-      return obj.public_send(@op)
-    else
-      raise Error::UnsupportedOperation.new(
-        "`#{obj.type}' does not support `#{@op}'.")
-    end
+  def bool_eval?(scope)
+    return eval(scope).bool_eval?(scope)
   end
 end
 
@@ -103,14 +101,10 @@ class BinaryExpressionNode < BaseNode
   end
 
   def eval(scope)
-    l = @l.eval(scope).unwrap_all
-    r = @r.eval(scope).unwrap_all
-    if l.class.method_defined?(@op)
-      return l.public_send(@op, r)
-    else
-      raise Error::UnsupportedOperation.new(
-        "`#{@l.type}' does not support `#{@op}'.")
-    end
+    l = @l.eval(scope)#.unwrap_all
+    r = @r.eval(scope)#.unwrap_all
+
+    l.ext_call(@op, r, scope)
   end
 
   def bool_eval?(scope)
@@ -134,6 +128,11 @@ class PrintNode < BaseNode
     else
       puts
     end
+  end
+
+  def bool_eval?(scope)
+    self.eval(scope)
+    return True
   end
 end
 

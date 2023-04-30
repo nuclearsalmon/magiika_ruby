@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 
-class MemberAccessStmt < TypeNode
+class MemberAccessStmt < BaseNode
   attr_reader :source, :action
   def initialize(source, action)
     @source, @action = source, action
@@ -40,7 +40,7 @@ class MemberAccessStmt < TypeNode
 end
 
 
-class MemberAssignStmt < TypeNode
+class MemberAssignStmt < BaseNode
   def initialize(access, value)
     @access, @value = access, value
 

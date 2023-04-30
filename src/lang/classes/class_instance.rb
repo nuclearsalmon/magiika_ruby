@@ -44,9 +44,9 @@ class ClassNode < TypeNode
 
     @stmts.each {
       |stmt|
-      puts "cls stmt:"
-      p stmt
-      puts "\n"
+      #puts "cls stmt:"
+      #p stmt
+      #puts "\n"
       
       if stmt.class <= ConstructorDefStmt
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }

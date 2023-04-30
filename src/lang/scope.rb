@@ -8,7 +8,7 @@ class Scope
     @scopes = [{:@scope_type => :global}]
   end
 
-  SEPARATOR_SCOPE_SLICE = {:@scope_type => :"---"}.freeze
+  SEPARATOR_SCOPE_SLICE = {:@scope_type => :"---"   }.freeze
   FN_QUERY_SCOPE_SLICE  = {:@scope_type => :fn_query}.freeze
 
   # ⭐ PROTECTED

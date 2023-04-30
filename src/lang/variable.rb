@@ -54,7 +54,9 @@ class AssignVariableStmt < BaseNode
     scope.scopes.each {
       |scope| 
       puts "- #{scope[:@scope_type]}"
-      puts "  (value): #{scope[@name].value}" if scope[@name] != nil && scope[@name].respond_to?(:value)
+      if scope[@name] != nil && scope[@name].respond_to?(:value)
+        puts "  (value): #{scope[@name].value}"
+      end
     }
     #puts "top scope:"
     #p scope.scopes[-1]
@@ -105,18 +107,16 @@ class ReassignVariableStmt < BaseNode
     super()
   end
 
-  def eval_base(scope)
+  def eval(scope)
     KeywordSafety.validate_keyword(@name)
 
     if !TypeSafety.valid_type?(@name, scope)
-      raise Error::UnsupportedOperation.new(
-        "using `#{@name}' as a variable name.")
+      raise Error::UnsupportedOperation.new("using `#{@name}' as a variable name.")
     end
 
     # get default object
     if @object == nil
-      raise Error::UnsupportedOperation.new(
-        "redeclaration to nil.")
+      raise Error::UnsupportedOperation.new('redeclaration to nil.')
     else
       obj = MagicNode.new(@object.eval(scope))  # wrap in magic
     end
@@ -127,14 +127,16 @@ class ReassignVariableStmt < BaseNode
   end
 
   def output(scope)
-    return eval_base.output(scope)
+    obj = self.eval(scope)
+    if obj.respond_to?(:output)
+      return obj.output(scope)
+    else
+      return ''
+    end
   end
 
   def bool_eval?(scope)
-    return eval_base.bool_eval?(scope)
-  end
-
-  def eval(scope)
-    return eval_base.eval(scope)
+    self.eval(scope)
+    return true
   end
 end

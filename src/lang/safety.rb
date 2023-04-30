@@ -42,6 +42,34 @@ module KeywordSafety
   module_function :validate_keyword
 end
 
+
+module TypeNodeSafety
+  def verify_class(obj)
+    if !(obj.class <= self.class)
+      raise Error::MismatchedType.new(obj, self)
+    end
+  end
+
+  def verify_classes(obj, ok_classes)
+    if !ok_classes.include?(obj.class)
+      raise Error::MismatchedType.new(obj, ok_classes)
+    end
+  end
+
+  def verify_type(obj)
+    if obj.type != self.type
+      raise Error::MismatchedType.new(obj, self)
+    end
+  end
+
+  def verify_types(obj, ok_types)
+    if !ok_types.include?(obj.type)
+      raise Error::MismatchedType.new(obj, ok_classes)
+    end
+  end
+end
+
+
 module TypeSafety
   # ⭐ PRIVATE
   # ---------------------------------------------------------------------------

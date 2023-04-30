@@ -77,12 +77,12 @@ CONDITIONS_PROC = Proc.new do
   end
 
   rule :comp_op do
-    match("==")
-    match("!=")
-    match(">")
-    match("<")
-    match(">=")
-    match("<=")
+    match("==")                   {:eq}
+    match("!=")                   {:neq}
+    match(">")                    {:gt}
+    match("<")                    {:lt}
+    match(">=")                   {:gte}
+    match("<=")                   {:lte}
   end
 
   rule :comp do

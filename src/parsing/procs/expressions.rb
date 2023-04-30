@@ -6,11 +6,11 @@ EXPRESSIONS_PROC = Proc.new do
   rule :expr do
     match(:expr, "+", :term) {
       |l,op,r|
-      BinaryExpressionNode.new(l, op, r)
+      BinaryExpressionNode.new(l, :add, r)
     }
     match(:expr, "-", :term) {
       |l,op,r|
-      BinaryExpressionNode.new(l, op, r)
+      BinaryExpressionNode.new(l, :sub, r)
     }
     match(:term)
   end
@@ -19,19 +19,19 @@ EXPRESSIONS_PROC = Proc.new do
   rule :term do
     match(:term, "*", :unary_prefix_op) {
       |l,op,r|
-      BinaryExpressionNode.new(l, op, r)
+      BinaryExpressionNode.new(l, :mult, r)
     }
     match(:term, "/", :unary_prefix_op) {
       |l,op,r|
-      BinaryExpressionNode.new(l, op, r)
+      BinaryExpressionNode.new(l, :div, r)
     }
     match(:term, "%", :unary_prefix_op) {
       |l,op,r|
-      BinaryExpressionNode.new(l, op, r)
+      BinaryExpressionNode.new(l, :mod, r)
     }
     match(:term, "//", :unary_prefix_op) {
       |l,op,r|
-      BinaryExpressionNode.new(l, :int_div, r)
+      BinaryExpressionNode.new(l, :idiv, r)
     }
     match(:unary_prefix_op)
   end
@@ -39,7 +39,7 @@ EXPRESSIONS_PROC = Proc.new do
   rule :unary_prefix_op do
     match("-", :unary_postfix_op) {
       |op,obj|
-      UnaryExpressionNode.new(op, obj)
+      UnaryExpressionNode.new(:sub, obj)
     }
     match("++", :unary_postfix_op) {
       |_,obj|
