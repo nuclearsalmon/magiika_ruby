@@ -44,14 +44,6 @@ class Scope
                    value=nil,
                    mode=:default,
                    ignore_const=false)
-    #puts "Access `#{name}` in `#{mode}` mode, with value:"
-    #p value
-    #puts "\n"
-    #if name == "type" && value == nil
-    #  raise Error::Magiika.new("fucky wucky") 
-    #end
-    #puts "\n"
-
     if mode == :push
       raise Error::Magiika.new("Push mode requires a value.") if value == nil
       raise Error::AlreadyDefined.new(name) if @scopes[-1][name] != nil
@@ -64,50 +56,57 @@ class Scope
         "Retrieval only uses the `:default` mode. Requested mode: `#{mode}`")
     end
 
-    do_skip = @scopes[-1][:@scope_type] == :fn_query
+    i = @scopes.length - 1
+    skip = false
     skip_scope_types = [
       :cls_base,
       :cls_inst,
       :cls_init,
       :cls_ref,
+      :fn_call,
     ]
-
-    @scopes.reverse_each {
-      |scope|
+    while i >= 0
+      scope = @scopes[i]
+      
       #puts "---"
       #p name
       #p mode
       #p scope[name]
       #p scope
       #puts "---"
-      next if scope[name] == nil
-      next if do_skip && skip_scope_types.include?(scope[:@scope_type])
 
-      if value != nil    # assignment
-        case mode
-        when :default
-          raise Error::AlreadyDefined.new(name)
-        when :replace
-          verify_not_const(scope, name) if !ignore_const 
-          scope[name] = value
-          return value
-        when :retrieve
-          verify_not_const(scope, name) if !ignore_const 
+      if (skip && scope[:@scope_type] != :global \
+          && !skip_scope_types.include?(scope[:@scope_type]))
+        nil # do nothing
+      elsif scope[name] != nil
+        if value != nil    # assignment
+          case mode
+          when :default
+            raise Error::AlreadyDefined.new(name)
+          when :replace
+            verify_not_const(scope, name) if !ignore_const 
+            scope[name] = value
+            return value
+          when :retrieve
+            verify_not_const(scope, name) if !ignore_const 
+            return scope[name]
+          else
+            raise Error::Magiika.new("Undefined mode: `#{mode}`")
+          end
+        else              # retrieval
           return scope[name]
-        else
-          raise Error::Magiika.new("Undefined mode: `#{mode}`")
         end
-      else              # retrieval
-        return scope[name]
+      elsif scope[:@scope_type] == :fn_call
+        skip = true
       end
-    }
+      i -= 1
+    end
 
     # name not found
     if value != nil       # assignment
       @scopes[-1][name] = value
       return value
     else                  # retrieval
-      p @scopes
       raise Error::UndefinedVariable.new(name)
     end
   end
@@ -207,6 +206,20 @@ class Scope
   #                       do not replace.
   #                       Errors when `value=nil`.
   def section_set(name, key, definition=nil, mode=:default)
+    if mode == :push
+      if @scopes[-1][name] == nil
+        @scopes[-1][name] = Hash.new
+      elsif @scopes[-1][name].class == Hash
+        if @scopes[-1][name][key] != nil
+          raise Error::AlreadyDefined.new(key)
+        end
+      else
+        raise Error::MismatchedType.new(@scopes[-1][name], Hash)
+      end
+      @scopes[-1][name][key] = definition
+      return
+    end
+
     section = access_scope(name, Hash.new, :retrieve)
     raise Error::MismatchedType.new(section, Hash) if !section.class == Hash
 

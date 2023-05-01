@@ -9,11 +9,19 @@ class MemberAccessStmt < BaseNode
     super()
   end
 
-  def unwrap_eval(scope)
+  def eval(scope)
+    #puts "--- accessing"
+    #puts "@source:"
+    #p @source
     src_obj = @source.eval(scope).unwrap_all()
+    #puts "src_obj:"
+    #p src_obj
     
     action = @action
+    #puts "action:"
+    #p action
     while action.class <= MemberAccessStmt
+      #puts "- enter access loop"
       if !src_obj.respond_to?(:run)
         raise Error::UnsupportedOperation.new(
           "`#{src_obj.type}' does not support entering its scope.")
@@ -21,21 +29,17 @@ class MemberAccessStmt < BaseNode
 
       src_obj = src_obj.run(action.source, scope)
       action = action.action
+      #puts "src_obj:"
+      #p src_obj
+      #puts "action:"
+      #p action
     end
+    #puts "- arrived at final"
 
-    return src_obj.run(action, scope)
-  end
-
-  def eval(scope)
-    return unwrap_eval(scope).eval(scope)
-  end
-
-  def bool_eval?(scope)
-    return unwrap_eval(scope).bool_eval?(scope)
-  end
-
-  def output(scope)
-    return unwrap_eval(scope).output(scope)
+    result = src_obj.run(action, scope)
+    #puts "result:"
+    #p result
+    return result
   end
 end
 
@@ -67,7 +71,7 @@ class MemberAssignStmt < BaseNode
 
     if action.class <= RetrieveVariableStmt
       var_name = action.name
-      # important, otherwise we end up with uneval'd assignments
+      # important, otherwise we end u#p with uneval'd assignments
       value    = @value.eval(scope)
       
       src_obj.set(var_name, value, scope)

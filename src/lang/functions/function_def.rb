@@ -18,7 +18,7 @@ class AbstractFunctionDefStmt < BaseNode
     }
     fn_key = FunctionUtils.get_fn_key(FunctionUtils.types_from_params(@params))
 
-    scope.section_add(@name, fn_key, fn_def)
+    scope.section_set(@name, fn_key, fn_def, :push)
   end
 end
 
@@ -41,6 +41,6 @@ class FunctionDefStmt < BaseNode
 
     fn_key = FunctionUtils.get_fn_key(FunctionUtils.types_from_params(@params))
     
-    scope.section_add(@name, fn_key, fn_def)
+    scope.section_set(@name, fn_key, fn_def, :push)
   end
 end

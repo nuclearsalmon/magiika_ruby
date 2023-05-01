@@ -44,9 +44,7 @@ class ClassNode < TypeNode
 
     @stmts.each {
       |stmt|
-      #puts "cls stmt:"
-      #p stmt
-      #puts "\n"
+      next if stmt == :eol_tok or stmt == nil
       
       if stmt.class <= ConstructorDefStmt
         scope.exec_scope(@constructor_scope) { stmt.eval(scope) }
