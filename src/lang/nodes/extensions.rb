@@ -10,7 +10,7 @@ module OperatorUtils
       raise Error::MismatchedType.new(obj, self.class)
     end
     
-    return self.value.public_send(op, obj.value)
+    return @value.public_send(op, obj.value)
   end
 
   def __passthrough(op, obj)
@@ -25,24 +25,24 @@ end
 
 module IncDecOperators
   def __pre_inc(_)
-    self.value += 1
+    @value += 1
     return self.clone
   end
 
   def __pre_dec(_)
-    self.value -= 1
+    @value -= 1
     return self.clone
   end
 
   def __post_inc(_)
     copy = self.clone
-    self.value += 1
+    @value += 1
     return copy
   end
 
   def __post_dec(_)
     copy = self.clone
-    self.value -= 1
+    @value -= 1
     return copy
   end
 end
@@ -133,7 +133,7 @@ module BitwiseOperators
     return self_bytes.zip(other_bytes).map{|l,r| Utils.unsign([~(l^r)])}
   end
 
-  def __bitwise_xnor(other, _)  # same as xnor
+  def __bitwise_xand(other, _)  # same as xnor
     return bitwise_xnor(other)
   end
 

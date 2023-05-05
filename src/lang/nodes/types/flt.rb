@@ -14,7 +14,7 @@ class FltNode < TypeNode
       raise Error::MismatchedType.new(value, self.type)
     end
 
-    @value = value.to_f
+    @value = Utils.round_float(value.to_f)
     super()
   end
 

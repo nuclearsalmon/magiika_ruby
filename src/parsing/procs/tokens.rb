@@ -9,7 +9,6 @@ TOKENS_PROC = Proc.new do
 
   # comments
   token(/#.*$/)
-
   #token(/\/\/.*$/)
   token(/\/\*([^*]|\r?\n|(\*+([^*\/]|\r?\n)))*\*+\//)
   
@@ -35,7 +34,7 @@ TOKENS_PROC = Proc.new do
   token(/(\[|\]|\(|\)|\{|\}|,|\.|:|\$)/) {|t| t}
   
   # names
-  token(/[A-Za-z][A-Za-z_\-0-9]*/) {|t| t}
+  token(/[A-Za-z][A-Za-z0-9_]*/) {|t| t}
 
   # whitespace (run this last to allow for whitespace-sensitive tokens)
   token(/(\ |\t)+/)                                 # space or tab

@@ -49,18 +49,18 @@ class AssignVariableStmt < BaseNode
   end
 
   def eval(scope)
-    puts "\n---"
-    puts "assigning #{@name} to #{@object}..."
+    #puts "\n---"
+    #puts "assigning #{@name} to #{@object}..."
     scope.scopes.each {
       |scope| 
-      puts "- #{scope[:@scope_type]}"
+      #puts "- #{scope[:@scope_type]}"
       if scope[@name] != nil && scope[@name].respond_to?(:value)
-        puts "  (value): #{scope[@name].value}"
+        #puts "  (value): #{scope[@name].value}"
       end
     }
     #puts "top scope:"
     #p scope.scopes[-1]
-    puts "---\n\n"
+    #puts "---\n\n"
 
     var = scope.get(@name)
     raise Error::Magiika.new("undefined variable `#{@name}'.") if var == nil
