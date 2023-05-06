@@ -57,12 +57,13 @@ class Scope
     end
 
     i = @scopes.length - 1
-    skip = false
-    skip_scope_types = [
+    filter_scopes = false
+    incl_scope_filter = [
       :cls_base,
       :cls_inst,
       :cls_init,
       :cls_ref,
+      :cls_run,
       :fn_call,
     ]
     while i >= 0
@@ -71,12 +72,14 @@ class Scope
       #puts "---"
       #p name
       #p mode
+      #p filter_scopes
+      #p scope[:@scope_type]
       #p scope[name]
       #p scope
       #puts "---"
 
-      if (skip && scope[:@scope_type] != :global \
-          && !skip_scope_types.include?(scope[:@scope_type]))
+      if (filter_scopes && scope[:@scope_type] != :global \
+          && !incl_scope_filter.include?(scope[:@scope_type]))
         nil # do nothing
       elsif scope[name] != nil
         if value != nil    # assignment
@@ -97,7 +100,7 @@ class Scope
           return scope[name]
         end
       elsif scope[:@scope_type] == :fn_call
-        skip = true
+        filter_scopes = true
       end
       i -= 1
     end
