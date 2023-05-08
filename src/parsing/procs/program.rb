@@ -51,16 +51,16 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :return_stmt do
-    match("return", :cond)      {|_,stmt| ReturnStmtNode.new(stmt)}
-    match("return")             {ReturnStmtNode.new(nil)}
+    match('return', :cond)      {|_,stmt| ReturnStmtNode.new(stmt)}
+    match('return')             {ReturnStmtNode.new(nil)}
   end
   
   rule :break_stmt do
-    match("break")              {BreakStmtNode.new}
+    match('break')              {BreakStmtNode.new}
   end
 
   rule :continue_stmt do
-    match("continue")           {ContinueStmtNode.new}
+    match('continue')           {ContinueStmtNode.new}
   end
 
   rule :syslib_call do
@@ -68,41 +68,41 @@ PROGRAM_PROC = Proc.new do
   end
   
   rule :elif_keyword do
-    match(:eol, "elif")
-    match("elif")
+    match(:eol, 'elif')
+    match('elif')
   end
   
   rule :else_keyword do
-    match(:eol, "else")
-    match("else")
+    match(:eol, 'else')
+    match('else')
   end
 
   rule :if_stmt do
-    match("if", :cond, ":", :oneline_stmt, :elif_stmt) {
+    match('if', :cond, ':', :oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, else_stmt=elif)
     }
-    match("if", :cond, ":", :oneline_stmt) {
+    match('if', :cond, ':', :oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
 
-    match("if", :cond, :stmts_block, :elif_stmt) {
+    match('if', :cond, :stmts_block, :elif_stmt) {
       |_,cond,stmts,elif|
       IfNode.new(cond, stmts, else_stmt=elif)
     }
-    match("if", :cond, :stmts_block) {
+    match('if', :cond, :stmts_block) {
       |_,cond,stmts|
       IfNode.new(cond, stmts)
     }
   end
 
   rule :elif_stmt do
-    match(:elif_keyword, :cond, ":", :oneline_stmt, :elif_stmt) {
+    match(:elif_keyword, :cond, ':', :oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, elif_else=elif)
     }
-    match(:elif_keyword, :cond, ":", :oneline_stmt) {
+    match(:elif_keyword, :cond, ':', :oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
@@ -120,7 +120,7 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :else_stmt do
-    match(:else_keyword, ":", :oneline_stmt) {
+    match(:else_keyword, ':', :oneline_stmt) {
       |_,_,stmt|
       cond = BoolNode.new(true)  # always eval to true
       IfNode.new(cond, stmt)
@@ -134,12 +134,12 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :while_stmt do
-    match("while", :cond, ":", :oneline_stmt) {
+    match('while', :cond, ':', :oneline_stmt) {
       |_,cond,_,stmt|
       WhileNode.new(cond, stmt)
     }
 
-    match("while", :cond, :stmts_block) {
+    match('while', :cond, :stmts_block) {
       |_,cond,stmts|
       WhileNode.new(cond, stmts)
     }

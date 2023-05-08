@@ -4,7 +4,7 @@
 # ------------------------------------------------------------------------------
 TYPES_PROC = Proc.new do
   rule :name do
-    match(/(^[A-Za-z_][A-Za-z0-9_]*$)/)
+    match(/([A-Za-z_][A-Za-z0-9_]*)/)
   end
   
   rule :value do

@@ -80,7 +80,7 @@ class Magiika
       @show_empty = !@show_empty
       _notify("show empty " + _cond_to_tg(@show_empty) + "\n")
     when "\n"
-      _warn("unspecified command. try `##h'.")
+      _warn("unspecified command. try `##h'.\n")
     when "h"
       _notify(ANSI_UNDERLINE_ON + 
         "command list ⊹ ₊+          " + ANSI_UNDERLINE_OFF + "\n" + 
@@ -97,6 +97,8 @@ class Magiika
 
   def interactive
     _banner()
+    _notify("(type `##h' for debug commands ₊+)")
+    print "\n"
     while true
       print '✨ '
       input = gets

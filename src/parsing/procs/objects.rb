@@ -8,22 +8,22 @@ OBJECTS_PROC = Proc.new do
   # --------------------------------------------------------
 
   rule :magic_declare_var do
-    match(":", :name, "=", :cond) {
+    match(':', :name, '=', :cond) {
       |_,name,_,value| 
-      DeclareVariableStmt.new("magic", name, value)
+      DeclareVariableStmt.new('magic', name, value)
     }
-    match(":", :name) {
+    match(':', :name) {
       |_,name| 
-      DeclareVariableStmt.new("magic", name)
+      DeclareVariableStmt.new('magic', name)
     }
   end
 
   rule :typed_declare_var do
-    match(:name, ":", :name, "=", :expr) {
+    match(:name, ':', :name, '=', :expr) {
       |type,_,name,_,value| 
       DeclareVariableStmt.new(type, name, value)
     }
-    match(:name, ":", :name) {
+    match(:name, ':', :name) {
       |type,_,name|
       DeclareVariableStmt.new(type, name)
     }
@@ -39,7 +39,7 @@ OBJECTS_PROC = Proc.new do
   # --------------------------------------------------------
 
   rule :assign_var do
-    match(:name, "=", :expr) {
+    match(:name, '=', :expr) {
       |name,_,value|
       AssignVariableStmt.new(name, value)
     }
@@ -49,7 +49,7 @@ OBJECTS_PROC = Proc.new do
     # special declaration syntax
     # FIXME: This should later be inside a statement, not freestanding.
     #        This is temporary just for testing purposes.
-    match(:name, ":=", :expr) {
+    match(:name, ':=', :expr) {
       |name,_,value| 
       ReassignVariableStmt.new(name, value)
     }
@@ -84,7 +84,7 @@ OBJECTS_PROC = Proc.new do
 
   rule :member_assign do
     match(:assign_var)
-    match(:member_access, "=", :expr) {
+    match(:member_access, '=', :expr) {
       |access,_,value|
       MemberAssignStmt.new(access, value)
     }

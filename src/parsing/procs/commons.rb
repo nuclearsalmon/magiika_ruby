@@ -4,13 +4,13 @@
 # ------------------------------------------------------------------------------
 COMMONS_PROC = Proc.new do
   rule :l_curbracket do
-    match("{")
-    match(:eol, "{")
+    match('{')
+    match(:eol, '{')
   end
 
   rule :r_curbracket do
-    match("}")
-    match("}", :eol)
+    match('}')
+    match('}', :eol)
   end
 
   rule :curbracket_block do
@@ -18,13 +18,13 @@ COMMONS_PROC = Proc.new do
   end
 
   rule :l_parenthesis do
-    match("(")
-    match(:eol, "(")
+    match('(')
+    match(:eol, '(')
   end
 
   rule :r_parenthesis do
-    match(")")
-    match(")", :eol)
+    match(')')
+    match(')', :eol)
   end
 
   rule :parenthesis_block do
@@ -32,13 +32,13 @@ COMMONS_PROC = Proc.new do
   end
 
   rule :l_sqbracket do
-    match("[")
-    match(:eol, "]")
+    match('[')
+    match(:eol, ']')
   end
 
   rule :r_sqbracket do
-    match("]")
-    match("]", :eol)
+    match(']')
+    match(']', :eol)
   end
 
   rule :sqbracket_block do
