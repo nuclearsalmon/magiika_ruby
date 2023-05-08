@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'set'
+
 
 class Scope
   attr_reader :scopes
@@ -14,6 +16,14 @@ class Scope
   # ⭐ PROTECTED
   # --------------------------------------------------------
   protected
+
+  INCL_SCOPE_FILTER = Set[
+    :cls_base,
+    :cls_inst,
+    :cls_init,
+    :cls_ref,
+    :cls_run
+  ].freeze
 
   def verify_not_const(scope, name) 
     if scope[name].class <= TypeNode
@@ -58,17 +68,9 @@ class Scope
 
     i = @scopes.length - 1
     filter_scopes = false
-    incl_scope_filter = [
-      :cls_base,
-      :cls_inst,
-      :cls_init,
-      :cls_ref,
-      :cls_run,
-      :fn_call,
-    ]
     while i >= 0
       scope = @scopes[i]
-      
+
       #puts "---"
       #p name
       #p mode
@@ -79,7 +81,7 @@ class Scope
       #puts "---"
 
       if (filter_scopes && scope[:@scope_type] != :global \
-          && !incl_scope_filter.include?(scope[:@scope_type]))
+          && !INCL_SCOPE_FILTER.include?(scope[:@scope_type]))
         nil # do nothing
       elsif scope[name] != nil
         if value != nil    # assignment
