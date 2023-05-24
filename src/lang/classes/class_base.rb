@@ -2,7 +2,7 @@
 
 
 class ClassNode < TypeNode
-  attr_reader :name, :inherit_type
+  attr_reader :name, :inherit_cls
   attr_reader :defined, :define
   attr_reader :cls_scope, :instance_stmts, :constructor_stmts
 
@@ -81,7 +81,12 @@ class ClassNode < TypeNode
   def run(stmt, scope)
     define(scope)
 
-    return scope.exec_scope(@cls_scope) {
+    scopes = [
+      @inherit_cls.cls_scope,
+      @cls_scope
+    ]
+
+    return scope.exec_scopes(scopes) {
       next stmt.eval(scope)
     }
   end

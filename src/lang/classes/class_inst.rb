@@ -57,6 +57,7 @@ class ClassInstanceNode < TypeNode
 
   def run(stmt, scope)
     scopes = [
+      @cls.inherit_cls.cls_scope,
       @cls.cls_scope,
       @instance_scope
     ]
