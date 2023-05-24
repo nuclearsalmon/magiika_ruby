@@ -20,6 +20,11 @@ class ClassInstanceNode < TypeNode
   def instantiate(args, scope)
     @cls.define(scope)
 
+    if @cls.abstract
+      raise Error::Magiika.new(
+        'Instantiating a class with abstract variables or functions is not allowed.')
+    end
+
     # define self in scope
     @instance_scope['self'] = MetaNode.new([:const], self, self)
 

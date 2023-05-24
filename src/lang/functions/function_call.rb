@@ -24,6 +24,11 @@ class FunctionCallStmt < BaseNode
       end
     else
       fn_def_meta, fn_call_scope_slice = FunctionUtils.find_fn(@name, @args, scope)
+
+      if fn_def_meta.abstract
+        raise Error::Magiika.new('Abstract functions cannot be evaluated.')
+      end
+
       fn_def = fn_def_meta.unwrap
 
       result = scope.exec_scope(fn_call_scope_slice) {

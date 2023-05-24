@@ -20,13 +20,9 @@ end
 
 
 class ConstructorDefStmt < FunctionDefStmt
-  def initialize(params=[], stmts=StmtsNode.new([]))
+  def initialize(params=[], stmts=[])
     # inject return
-    stmts = StmtsNode.new(
-      stmts.unwrap.concat(
-        [ReturnStmtNode.new(RetrieveVariableStmt.new('self'))]
-      )
-    )
+    stmts = stmts.concat([ReturnStmtNode.new(RetrieveVariableStmt.new('self'))])
     
     super([], 'init', params, [], RetrieveVariableStmt.new('self'), stmts)
   end

@@ -20,9 +20,9 @@ FUNCTIONS_PROC = Proc.new do
   end
 
   rule :fn_stmts_block do
-    match(:curbracket_block)            {StmtsNode.new([])}
+    match(:curbracket_block)            {[]}
     match(:l_curbracket, :fn_stmts, :r_curbracket) {
-      |_,stmts,_| StmtsNode.new(stmts)
+      |_,stmts,_| stmts
     }
   end
 
@@ -82,11 +82,6 @@ FUNCTIONS_PROC = Proc.new do
     match(':')
   end
 
-  rule :fn_ident do
-    match(:abstract, :fn_ident_type)    {|abst,_| [abst]}
-    match(:fn_ident_type)               {[]}
-  end
-
   # ✨ Return value
   # --------------------------------------------------------
 
@@ -100,13 +95,13 @@ FUNCTIONS_PROC = Proc.new do
 
   rule :fn_def do
     match(:fn_ident, :name, :params_block, :fn_stmts_block) {
-      |attribs,name,params,stmts|
-      FunctionDefStmt.new(attribs, name, params, [], nil, stmts)
+      |_,name,params,stmts|
+      FunctionDefStmt.new([], name, params, [], nil, stmts)
     }
     match(:fn_ident, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
-      |attribs,name,params,ret_ident,stmts|
+      |_,name,params,ret_ident,stmts|
       ret_attribs, ret_type = *ret_ident
-      FunctionDefStmt.new(attribs, name, params, ret_attribs, ret_type, stmts)
+      FunctionDefStmt.new([], name, params, ret_attribs, ret_type, stmts)
     }
   end
 

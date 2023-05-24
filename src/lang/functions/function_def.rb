@@ -38,7 +38,7 @@ class FunctionDefStmt < BaseNode
     }
 
     fn_key = FunctionUtils.get_fn_key(FunctionUtils.types_from_params(@params))
-    fn_def = FunctionInstance.new(params, @ret_attribs, ret_type, @stmts)
+    fn_def = FunctionInstance.new(params, @ret_attribs, ret_type, StmtsNode.new(@stmts))
     meta = MetaNode.new(@attribs, fn_def, FunctionInstance)
     
     scope.section_set(@name, fn_key, meta, :push)

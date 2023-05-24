@@ -77,7 +77,7 @@ CLASSES_PROC = Proc.new do
   rule :cls_fn_attrib do
     match(:accessor)
     match(:static)
-    match(:fn_attrib)
+    match(:abstract)
   end
 
   rule :cls_fn_attribs do
@@ -99,6 +99,25 @@ CLASSES_PROC = Proc.new do
       |attribs,name,params,ret_ident,stmts|
       ret_attribs, ret_type = *ret_ident
       FunctionDefStmt.new(attribs, name, params, ret_attribs, ret_type, stmts)
+    }
+
+    match(:cls_fn_attribs, :fn_ident_type, :name, :params_block) {
+      |attribs,_,name,params|
+      if !(attribs.include?(:abst))
+        raise Error::UnsupportedOperation.new('Functions without {} must be marked as abstract.')
+      end
+      
+      FunctionDefStmt.new(attribs, name, params, [], nil, [])
+    }
+    match(:cls_fn_attribs, :fn_ident_type, :name,
+        :params_block, :fn_ret_ident) {
+      |attribs,_,name,params,ret_ident|
+      if !(attribs.include?(:abst))
+        raise Error::UnsupportedOperation.new('Functions without {} must be marked as abstract.')
+      end
+
+      ret_attribs, ret_type = *ret_ident
+      FunctionDefStmt.new(attribs, name, params, ret_attribs, ret_type, [])
     }
   end
 

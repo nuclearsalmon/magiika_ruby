@@ -3,7 +3,7 @@
 
 class ClassNode < TypeNode
   attr_reader :name, :inherit_cls
-  attr_reader :defined, :define
+  attr_reader :defined, :abstract
   attr_reader :cls_scope, :instance_stmts, :constructor_stmts
 
   DEFAULT_CONSTRUCTOR_STMT = ConstructorDefStmt.new().freeze
@@ -19,6 +19,7 @@ class ClassNode < TypeNode
     end
     
     @defined            = false
+    @abstract           = false
     @constructor_stmts  = []
     @instance_stmts     = []
     @cls_scope          = {:@scope_type => :cls_base}
@@ -26,6 +27,8 @@ class ClassNode < TypeNode
 
   def define(scope)
     return if @defined
+
+    # inject self into scope
     @cls_scope['this'] = MetaNode.new([:const], self, self)
     
     # ensure defined inherit
@@ -36,10 +39,16 @@ class ClassNode < TypeNode
     @stmts.each {
       |stmt|
       next if stmt == :eol_tok or stmt == nil
-      
+
       if stmt.class <= ConstructorDefStmt
+        # set abstract status
+        @abstract = true if stmt.attribs.include?(:abst)
+      
         @constructor_stmts << stmt
       elsif stmt.class <= FunctionDefStmt
+        # set abstract status
+        @abstract = true if stmt.attribs.include?(:abst)
+
         if stmt.attribs.include?(:stat)
           # transform to constructor
           if stmt.name == 'init'
