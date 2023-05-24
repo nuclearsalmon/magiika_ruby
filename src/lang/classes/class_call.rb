@@ -20,10 +20,15 @@ class MemberAccessStmt < BaseNode
       end
 
       src_obj = src_obj.run(action.source, scope)
+      src_obj = src_obj.unwrap_only_class(MetaNode)
       action = action.action
     end
 
-    return src_obj.run(action, scope)
+    if (src_obj.class <= ClassNode || src_obj.class <= ClassInstanceNode)
+      return src_obj.run(action, scope)
+    else
+      raise Error::MismatchedType.new(src_obj, [ClassNode, ClassInstanceNode])
+    end
   end
 end
 
@@ -58,8 +63,12 @@ class MemberAssignStmt < BaseNode
       var_name = action.name
       # important, otherwise we end u#p with uneval'd assignments
       value    = @value.eval(scope)
-      
-      src_obj.run(AssignVariableStmt.new(var_name, value), scope)
+
+      if (src_obj.class <= ClassNode || src_obj.class <= ClassInstanceNode)
+        src_obj.run(AssignVariableStmt.new(var_name, value), scope)
+      else
+        raise Error::MismatchedType.new(src_obj, [ClassNode, ClassInstanceNode])
+      end
     else
       raise Error::Magiika.new(
         "Action #{action.class} cannot be used for variable assignment.")
