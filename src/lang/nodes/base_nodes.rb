@@ -79,17 +79,15 @@ class TypeNode < BaseNode
   # ✨ Extensions
   # --------------------------------------------------------
   
-  private
-  def __eq(other)
-    return false
+  def __eq(other, _)
+    return BoolNode.new(false)
   end
 
-  def __neq(other)
-    return !(__eq(other))
+  def __neq(other, _)
+    return BoolNode.new(true)
   end
 
   include BooleanOperators
-  public
 
   def ext_call(method_name, *args, &block)
     extended_method_name = ('__' + method_name.to_s).to_sym

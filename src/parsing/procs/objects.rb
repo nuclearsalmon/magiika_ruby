@@ -7,34 +7,20 @@ OBJECTS_PROC = Proc.new do
   # ✨ Variable declaration
   # --------------------------------------------------------
 
-  rule :magic_declare_var do
-    match(':', :name, '=', :cond) {
-      |_,name,_,value| 
-      DeclareVariableStmt.new('magic', name, value)
-    }
-    match(':', :name) {
-      |_,name| 
-      DeclareVariableStmt.new('magic', name)
-    }
-  end
-
-  rule :typed_declare_var do
-    match(:name, ':', :name, '=', :expr) {
-      |type,_,name,_,value| 
-      DeclareVariableStmt.new(type, name, value)
-    }
-    match(:name, ':', :name) {
-      |type,_,name|
-      DeclareVariableStmt.new(type, name)
-    }
-  end
-
   rule :declare_var do
-    match(:typed_declare_var)
-    match(:magic_declare_var)
+    match(:type_ident, :name, '=', :expr) {
+      |ident,name,_,value| 
+      attribs, type = *ident
+      DeclareVariableStmt.new(attribs, type, name, value)
+    }
+    match(:type_ident, :name) {
+      |ident,name|
+      attribs, type = *ident
+      DeclareVariableStmt.new(attribs, type, name)
+    }
   end
 
-
+  
   # ✨ Variable assignment and retrieval
   # --------------------------------------------------------
 

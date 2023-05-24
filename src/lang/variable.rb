@@ -5,37 +5,56 @@
 # ------------------------------------------------------------------------------
 
 class DeclareVariableStmt < BaseNode
-  attr_reader :type, :name, :value
-  attr_accessor :const
+  attr_reader :attribs, :type, :name, :value
 
-  def initialize(type, name, value = nil, const = false)
-    @type, @name, @value = type, name, value
-    @const = const
-    # Don't freeze, ConstStmt must be able to modify const flag.
+  def initialize(attribs, type, name, value=nil)
+    @attribs, @type, @name, @value = attribs, type, name, value
+    freeze
   end
 
   def eval(scope)
-    KeywordSafety.validate_keyword(@name)
-    
-    # get default object
-    if @value == nil
-      obj = TypeSafety.obj_from_typename(@type, scope)
+    KeywordSafety.verify_keyword_not_restricted(@name)
+
+    # evaluate type
+    type = @type
+    attribs = @attribs
+    if type == nil
+      # inject magic attribute if missing
+      # FIXME: modifying instance variable
+      attribs << :magic if !attribs.include?(:magic)
     else
-      obj = @value.eval(scope)
-      
-      if @type == MagicNode.type && obj.class != MagicNode
-        obj = MagicNode.new(obj)  # wrap in magic
-      elsif (obj == BaseNode and @type != obj.unwrap_all.type)
-        raise Error::Magiika.new("requested container type `#{@type}' " + 
-          "does not match data type `#{@object.type}'")
-      end
+      type = @type.eval(scope)
     end
     
-    obj = ConstNode.new(obj) if @const
+    # get default object
+    obj = @value
+    if obj == nil
+      if type == nil
+        # no type specified, force magic
+        if !@attribs.include?(:empty)
+          raise Error::Magiika.new(\
+            "`#{@name}' is not allowed to be empty, yet is missing a value.")
+        end
+        
+        obj = EmptyNode.get_default()
+      else
+        if type.respond_to?(:get_default)
+          obj = type.get_default()
+        else
+          if !@attribs.include?(:empty)
+            raise Error::Magiika.new("No default state exists for Type `#{type}'.")
+          end
 
-    scope.add(@name, obj)
-    
-    return obj
+          obj = EmptyNode.get_default()
+        end
+      end
+    else
+      obj = @value.eval(scope)
+    end
+
+    meta = MetaNode.new(attribs, obj, type)
+    scope.add(@name, meta)
+    return meta
   end
 end
 
@@ -43,57 +62,17 @@ end
 class AssignVariableStmt < BaseNode
   attr_reader :name
 
-  def initialize(name, object = nil)
-    @name, @object = name, object
-    super()
+  def initialize(name, obj)
+    @name, @obj = name, obj
+    freeze
   end
 
   def eval(scope)
-    #puts "\n---"
-    #puts "assigning #{@name} to #{@object}..."
-    scope.scopes.each {
-      |scope| 
-      #puts "- #{scope[:@scope_type]}"
-      if scope[@name] != nil && scope[@name].respond_to?(:value)
-        #puts "  (value): #{scope[@name].value}"
-      end
-    }
-    #puts "top scope:"
-    #p scope.scopes[-1]
-    #puts "---\n\n"
+    meta = scope.get(@name)
+    obj = @obj.eval(scope).unwrap_only_class(MetaNode)
+    meta.set_node(obj)
 
-    var = scope.get(@name)
-    raise Error::Magiika.new("undefined variable `#{@name}'.") if var == nil
-
-    obj = @object.eval(scope) #obj = @object.unwrap
-    if var.type == MagicNode.type
-      obj = MagicNode.new(obj)  # wrap in magic
-      scope.set(@name, obj, :replace)
-    elsif var.type == obj.type || \
-        (var.type == MagicNode.type && (var.magic_type == obj.type))
-      scope.set(@name, obj, :replace)
-    else
-      raise Error::NoSuchCast.new(obj, var)
-    end
     return obj
-  end
-end
-
-
-class RetrieveVariableStmt < BaseNode
-  attr_reader :name
-
-  def initialize(name)
-    @name = name
-    super()
-  end
-
-  def eval(scope)
-    return scope.get(@name)
-  end
-
-  def output(scope)
-    return eval(scope)
   end
 end
 
@@ -101,29 +80,17 @@ end
 class ReassignVariableStmt < BaseNode
   attr_reader :name
 
-  def initialize(name, object)
-    @name, @object = name, object
-
-    super()
+  def initialize(name, obj)
+    @name, @obj = name, obj
+    freeze
   end
 
   def eval(scope)
-    KeywordSafety.validate_keyword(@name)
+    KeywordSafety.verify_keyword_not_restricted(@name)
 
-    if !TypeSafety.valid_type?(@name, scope)
-      raise Error::UnsupportedOperation.new("using `#{@name}' as a variable name.")
-    end
-
-    # get default object
-    if @object == nil
-      raise Error::UnsupportedOperation.new('redeclaration to nil.')
-    else
-      obj = MagicNode.new(@object.eval(scope))  # wrap in magic
-    end
-
-    scope.add(@name, obj, replace=True)
-    
-    return obj
+    obj = @obj.eval(scope)
+    meta = scope.get(@name)
+    meta.set_node(obj)
   end
 
   def output(scope)
@@ -136,7 +103,47 @@ class ReassignVariableStmt < BaseNode
   end
 
   def bool_eval?(scope)
-    self.eval(scope)
-    return true
+    return self.eval(scope).bool_eval?(scope)
+  end
+end
+
+
+class RetrieveVariableStmt < BaseNode
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+    freeze
+  end
+
+  def eval(scope)
+    return scope.get(@name)
+  end
+
+  def output(scope)
+    return eval(scope)
+  end
+end
+
+
+class RetrieveTypeStmt < BaseNode
+  attr_reader :name
+
+  def initialize(access)
+    @access = access
+    freeze
+  end
+
+  def eval(scope)
+    obj = @access.eval(scope).unwrap_only_class(MetaNode)
+
+    # Verify valid type
+    TypeSafety.verify_is_a_type(obj)
+
+    return obj
+  end
+
+  def output(scope)
+    return eval(scope)
   end
 end

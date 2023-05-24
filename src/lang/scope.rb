@@ -7,11 +7,17 @@ class Scope
   attr_reader :scopes
 
   def initialize
-    @scopes = [{:@scope_type => :global}]
+    @scopes = [{
+      :@scope_type => :global,
+      'bool' => MetaNode.new([:const], nil, BoolNode, true),
+      'empty' => MetaNode.new([:const], nil, EmptyNode, true),
+      'flt' => MetaNode.new([:const], nil, FltNode, true),
+      'int' => MetaNode.new([:const], nil, IntNode, true),
+      'str' => MetaNode.new([:const], nil, StrNode, true),
+    }]
   end
 
   SEPARATOR_SCOPE_SLICE = {:@scope_type => :"---"   }.freeze
-  FN_QUERY_SCOPE_SLICE  = {:@scope_type => :fn_query}.freeze
 
   # ⭐ PROTECTED
   # --------------------------------------------------------
@@ -20,19 +26,8 @@ class Scope
   INCL_SCOPE_FILTER = Set[
     :cls_base,
     :cls_inst,
-    :cls_init,
-    :cls_ref,
-    :cls_run
+    :cls_init
   ].freeze
-
-  def verify_not_const(scope, name) 
-    if scope[name].class <= TypeNode
-      if scope[name].unwrap_contains_class?(ConstNode)
-        raise Error::UnsupportedOperation.new(\
-          "You cannot modify a const variable. Attepted to modify `#{name}'")
-      end
-    end
-  end
 
   # access_scope
   #  name     (string)  : Key.
@@ -43,17 +38,14 @@ class Scope
   #                         Does nothing when `value=nil`.
   #  - `:replace`       :  Replace if already defined.
   #                         Errors when `value=nil`.
-  #  - `:retrieve`      :  Return obj if already defined,
+  #  - `:retrieve`      :  Return value if already defined,
   #                         do not replace.
   #                         Errors when `value=nil`.
   #  - `:push`          :  Push to top of scopestack, error if
   #                         already defined in top scopestack.
-  #  ignore_const (bool): Allow setting objects even when 
-  #                        they're marked as const.
   def access_scope(name,
                    value=nil,
-                   mode=:default,
-                   ignore_const=false)
+                   mode=:default)
     if mode == :push
       raise Error::Magiika.new("Push mode requires a value.") if value == nil
       raise Error::AlreadyDefined.new(name) if @scopes[-1][name] != nil
@@ -71,15 +63,6 @@ class Scope
     while i >= 0
       scope = @scopes[i]
 
-      #puts "---"
-      #p name
-      #p mode
-      #p filter_scopes
-      #p scope[:@scope_type]
-      #p scope[name]
-      #p scope
-      #puts "---"
-
       if (filter_scopes && scope[:@scope_type] != :global \
           && !INCL_SCOPE_FILTER.include?(scope[:@scope_type]))
         nil # do nothing
@@ -89,11 +72,9 @@ class Scope
           when :default
             raise Error::AlreadyDefined.new(name)
           when :replace
-            verify_not_const(scope, name) if !ignore_const 
             scope[name] = value
             return value
           when :retrieve
-            verify_not_const(scope, name) if !ignore_const 
             return scope[name]
           else
             raise Error::Magiika.new("Undefined mode: `#{mode}`")
@@ -116,6 +97,12 @@ class Scope
     end
   end
 
+  def validate_meta(value)
+    if !(value.class <= MetaNode)
+      raise Error::UnsupportedOperation.new(\
+        "Value must be a MetaNode. Value: `#{value}'")
+    end
+  end
 
   # ⭐ PUBLIC
   # --------------------------------------------------------
@@ -133,30 +120,33 @@ class Scope
     return true
   end
 
-  def set(name, obj, mode=:default)
-    # This is possible, but not the indended usage of the `set` function.
-    raise Error::UnsupportedOperation.new("Attempted to set to nil.") if obj == nil
-
-    return access_scope(name, obj, mode)
+  def set(name, value, mode=:default)
+    # This is technically possible, 
+    # but not the indended usage of the `set` function.
+    raise Error::UnsupportedOperation.new("Attempted to set to nil.") if value == nil
+    validate_meta(value)
+    result = access_scope(name, value, mode)
+    validate_meta(result)
+    return result
   end
 
-  def add(name, obj)
-    return access_scope(name, obj, :push)
+  def add(name, value)
+    validate_meta(value)
+    result = access_scope(name, value, :push)
+    validate_meta(result)
+    return result
   end
 
   def get(name)
     result = access_scope(name)
-    if result.class <= TypeNode
-      result = result.unwrap_only_class(ConstNode)
-    end
+    validate_meta(result)
     return result
   end
 
-  def get_smart_get(name, obj)
-    result = access_scope(name, obj, :retrieve)
-    if result.class <= TypeNode
-      result = result.unwrap_only_class(ConstNode)
-    end
+  def get_smart_get(name, value)
+    validate_meta(value)
+    result = access_scope(name, value, :retrieve)
+    validate_meta(result)
     return result
   end
 
@@ -207,10 +197,12 @@ class Scope
   #                       Does nothing when `value=nil`.
   #  - `:replace`     :  Replace if already defined.
   #                       Errors when `value=nil`.
-  #  - `:retrieve`    :  Return obj if already defined,
+  #  - `:retrieve`    :  Return value if already defined,
   #                       do not replace.
   #                       Errors when `value=nil`.
   def section_set(name, key, definition=nil, mode=:default)
+    validate_meta(definition) if definition != nil
+
     if mode == :push
       if @scopes[-1][name] == nil
         @scopes[-1][name] = Hash.new
@@ -222,7 +214,7 @@ class Scope
         raise Error::MismatchedType.new(@scopes[-1][name], Hash)
       end
       @scopes[-1][name][key] = definition
-      return
+      return definition
     end
 
     section = access_scope(name, Hash.new, :retrieve)

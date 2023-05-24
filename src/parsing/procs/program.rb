@@ -5,6 +5,7 @@
 PROGRAM_PROC = Proc.new do
   start :program do
     match(:stmts)               {|stmts| StmtsNode.new(stmts)}
+    match('')                   {StmtsNode.new([])}
   end
 
   rule :eol do
@@ -18,6 +19,8 @@ PROGRAM_PROC = Proc.new do
     match(:eol, :stmts)         {|_,stmts|      stmts}
     match(:stmt, :eol)          {|stmt,_|       [stmt]}
     match(:stmt)                {|stmt|         [stmt]}
+    match(:eol)                 {[]}
+    match('')                   {[]}
   end
 
   rule :stmt do
@@ -25,15 +28,13 @@ PROGRAM_PROC = Proc.new do
 
     match(:if_stmt)
     match(:while_stmt)
-    match(:return_stmt)
 
     match(:cls_def)
-
     match(:fn_def)
-
+    
     match(:member_assign)
+    
     match(:reassign_var)
-    match(:const, :declare_var) {|_,stmt| ConstStmt.new(stmt)}
     match(:declare_var)
 
     match(:cond)
@@ -41,12 +42,32 @@ PROGRAM_PROC = Proc.new do
   
   rule :oneline_stmt do
     match(:eol, :stmt)          {|_,stmt| stmt}
+    match(:eol, :stmt, :eol)    {|_,stmt,_| stmt}
     match(:stmt)
   end
   
   rule :stmts_block do
+    match(:curbracket_block)    {StmtsNode.new([])}
     match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| StmtsNode.new(stmts)  # TODO: wrap in temporary scope
+      |_,stmts,_| StmtsNode.new(stmts)
+    }
+  end
+
+  rule :nested_stmt do
+    match(:return_stmt)
+    match(:stmt)
+  end
+
+  rule :nested_oneline_stmt do
+    match(:eol, :nested_stmt)          {|_,stmt| stmt}
+    match(:eol, :nested_stmt, :eol)    {|_,stmt,_| stmt}
+    match(:nested_stmt)
+  end
+
+  rule :nested_stmts_block do
+    match(:curbracket_block)    {StmtsNode.new([])}
+    match(:l_curbracket, :nested_stmts, :r_curbracket) {
+      |_,stmts,_| StmtsNode.new(stmts)
     }
   end
 
@@ -78,40 +99,40 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :if_stmt do
-    match('if', :cond, ':', :oneline_stmt, :elif_stmt) {
+    match('if', :cond, ':', :nested_oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, else_stmt=elif)
     }
-    match('if', :cond, ':', :oneline_stmt) {
+    match('if', :cond, ':', :nested_oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
 
-    match('if', :cond, :stmts_block, :elif_stmt) {
+    match('if', :cond, :nested_stmts_block, :elif_stmt) {
       |_,cond,stmts,elif|
       IfNode.new(cond, stmts, else_stmt=elif)
     }
-    match('if', :cond, :stmts_block) {
+    match('if', :cond, :nested_stmts_block) {
       |_,cond,stmts|
       IfNode.new(cond, stmts)
     }
   end
 
   rule :elif_stmt do
-    match(:elif_keyword, :cond, ':', :oneline_stmt, :elif_stmt) {
+    match(:elif_keyword, :cond, ':', :nested_oneline_stmt, :elif_stmt) {
       |_,cond,_,stmt,elif|
       IfNode.new(cond, stmt, elif_else=elif)
     }
-    match(:elif_keyword, :cond, ':', :oneline_stmt) {
+    match(:elif_keyword, :cond, ':', :nested_oneline_stmt) {
       |_,cond,_,stmt|
       IfNode.new(cond, stmt)
     }
 
-    match(:elif_keyword, :cond, :stmts_block, :elif_stmt) {
+    match(:elif_keyword, :cond, :nested_stmts_block, :elif_stmt) {
       |_,cond,stmts,elif|
       IfNode.new(cond, stmts, elif_else=elif)
     }
-    match(:elif_keyword, :cond, :stmts_block) {
+    match(:elif_keyword, :cond, :nested_stmts_block) {
       |_,cond,stmts|
       IfNode.new(cond, stmts)
     }
@@ -120,13 +141,13 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :else_stmt do
-    match(:else_keyword, ':', :oneline_stmt) {
+    match(:else_keyword, ':', :nested_oneline_stmt) {
       |_,_,stmt|
       cond = BoolNode.new(true)  # always eval to true
       IfNode.new(cond, stmt)
     }
 
-    match(:else_keyword, :stmts_block) {
+    match(:else_keyword, :nested_stmts_block) {
       |_,stmts|
       cond = BoolNode.new(true)  # always eval to true
       IfNode.new(cond, stmts)
@@ -134,12 +155,12 @@ PROGRAM_PROC = Proc.new do
   end
 
   rule :while_stmt do
-    match('while', :cond, ':', :oneline_stmt) {
+    match('while', :cond, ':', :nested_oneline_stmt) {
       |_,cond,_,stmt|
       WhileNode.new(cond, stmt)
     }
 
-    match('while', :cond, :stmts_block) {
+    match('while', :cond, :nested_stmts_block) {
       |_,cond,stmts|
       WhileNode.new(cond, stmts)
     }

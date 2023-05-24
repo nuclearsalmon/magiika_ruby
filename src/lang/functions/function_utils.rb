@@ -7,7 +7,10 @@ module FunctionUtils
 
   def types_from_params(params)
     types = []
-    params.each {|param| types << param[:type]}
+    params.each {
+      |param|
+      types << param[:type] == nil ? 'magic' : param[:type]
+    }
     return types
   end
   module_function :types_from_params
@@ -16,7 +19,7 @@ module FunctionUtils
     types = []
     args.each {
       |arg|
-      type = arg[:value].respond_to?(:type) ? arg[:value].type : "magic"
+      type = arg[:value].respond_to?(:type) ? arg[:value].type : nil
       types << type
     }
     return types
@@ -68,7 +71,7 @@ module FunctionUtils
   # ---------------------------------------------------------------------------
 
   def fill_params(fn_def, args, scope)
-    params = fn_def[:params]
+    params = fn_def.params
 
     raise Error::BadNrOfArgs.new(fn_def, -1) if params.length < args.length
     
@@ -90,40 +93,38 @@ module FunctionUtils
       # get param by arg name
       param = params_map[arg_name]
       raise Error::BadArgName.new(fn_def, arg_name) if param == nil
-      param_type, _, param_def_val = *param
 
       # check param not already assigned
       if fn_call_scope[arg_name] != nil
         raise Error::AlreadyDefined.new("Argument #{arg_name}")
       end
 
-      arg_value = scope.exec_scope(Scope::FN_QUERY_SCOPE_SLICE) {
-        next arg_value.eval(scope)
-      }
-
-      # check param type matches arg type
-      if !(param[:type] == "magic" || \
-          param[:type] == arg_value.type)
-        raise Error::MismatchedType.new(arg_value, param_type)
-      end
+      arg_value = arg_value.eval(scope)
 
       # assign arg value to param
-      fn_call_scope[arg_name] = arg_value
+      arg_value = arg_value.unwrap_only_class(MetaNode)
+      begin
+        arg_meta = MetaNode.new(param[:attribs], arg_value, param[:type])
+        fn_call_scope[arg_name] = arg_meta
+      rescue
+        metaspec = MetaNode.new(param[:attribs], nil, param[:type], true)
+        raise Error::MismatchedType.new(arg_value, metaspec)
+      end
     }
 
     # assign default if missing, otherwise error
     params.each {
       |param|
-      param_name, param_def_val = param[:name], param[:value]
 
-      next if fn_call_scope[param_name] != nil
+      next if fn_call_scope[param[:name]] != nil
 
-      if param_def_val == nil
+      if param[:value] == nil
         full_fn_sig = get_full_fn_sig(fn_def[:name], fn_def[:params], fn_def[:ret_type])
         raise Error::BadNrOfArgs.new(full_fn_sig, -1) 
       end
 
-      fn_call_scope[param_name] = param_def_val
+      param_def_meta = MetaNode.new(param[:attribs], param[:value], param[:type])
+      fn_call_scope[param[:name]] = param_def_meta
     }
 
     # eval all values
@@ -139,11 +140,11 @@ module FunctionUtils
   def find_fn(name, args, scope)
     fn_section = scope.section_get(name)
     fn_section.each {
-      |_,fn_def|
+      |_,fn_def_meta|
 
       begin
-        fn_call_scope = fill_params(fn_def, args, scope)
-        return [fn_def, fn_call_scope]
+        fn_call_scope = fill_params(fn_def_meta.unwrap, args, scope)
+        return [fn_def_meta, fn_call_scope]
       rescue Error::BadNrOfArgs, Error::BadArgName, \
           Error::MismatchedType, Error::AlreadyDefined
         nil

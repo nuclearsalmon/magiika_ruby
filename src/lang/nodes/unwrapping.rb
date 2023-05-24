@@ -7,7 +7,7 @@ module Unwrapping
   # unwrap down to bottom if possible
   def unwrap_all
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value do
       prev_value = value
       value = value.unwrap()
@@ -19,7 +19,7 @@ module Unwrapping
     return self if (incl_self and self.class == cls)
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value and value.class != cls do
       prev_value = value
       value = value.unwrap()
@@ -31,7 +31,7 @@ module Unwrapping
     return self if (incl_self and classes.include?(self.class))
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value and !classes.include?(value.class) do
       prev_value = value
       value = value.unwrap()
@@ -43,7 +43,7 @@ module Unwrapping
     return self if (incl_self and self.class != cls)
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value and value.class == cls do
       prev_value = value
       value = value.unwrap()
@@ -56,7 +56,7 @@ module Unwrapping
     return self if (incl_self and !classes.include?(self.class))
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value and classes.include?(value.class) do
       prev_value = value
       value = value.unwrap()
@@ -68,7 +68,7 @@ module Unwrapping
     element_list = incl_self ? [self] : []
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value do
       prev_value = value
       value = value.unwrap()
@@ -81,7 +81,7 @@ module Unwrapping
     class_list = incl_self ? [self.class] : []
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value do
       prev_value = value
       value = value.unwrap()
@@ -94,7 +94,7 @@ module Unwrapping
     return true if (incl_self and self.class == cls)
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value do
       return true if value.class == cls
       prev_value = value
@@ -107,7 +107,7 @@ module Unwrapping
     return true if (incl_self and classes.include?(self.class))
 
     prev_value = self
-    value = unwrap()
+    value = self.unwrap()
     while value != prev_value do
       return true if classes.include?(value.class)
       prev_value = value

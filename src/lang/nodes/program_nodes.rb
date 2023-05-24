@@ -84,7 +84,7 @@ class UnaryExpressionNode < BaseNode
   end
 
   def eval(scope)
-    l = @obj.eval(scope)#.unwrap_all
+    l = @obj.eval(scope).unwrap_all
     l.ext_call(@op, scope)
   end
 
@@ -101,8 +101,8 @@ class BinaryExpressionNode < BaseNode
   end
 
   def eval(scope)
-    l = @l.eval(scope)#.unwrap_all
-    r = @r.eval(scope)#.unwrap_all
+    l = @l.eval(scope).unwrap_all
+    r = @r.eval(scope).unwrap_all
 
     l.ext_call(@op, r, scope)
   end
@@ -121,6 +121,10 @@ class PrintNode < BaseNode
 
   def eval(scope)
     result = @value.eval(scope)
+    if result.class <= MetaNode
+      result = result.unwrap_all
+    end
+
     if result.respond_to?(:output)
       puts result.output(scope)
     elsif result != nil
@@ -128,11 +132,12 @@ class PrintNode < BaseNode
     else
       puts
     end
+    return nil
   end
 
   def bool_eval?(scope)
     self.eval(scope)
-    return True
+    return true
   end
 end
 

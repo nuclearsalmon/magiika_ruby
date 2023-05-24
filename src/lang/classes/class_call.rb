@@ -10,18 +10,10 @@ class MemberAccessStmt < BaseNode
   end
 
   def eval(scope)
-    #puts "--- accessing"
-    #puts "@source:"
-    #p @source
     src_obj = @source.eval(scope).unwrap_all()
-    #puts "src_obj:"
-    #p src_obj
-    
     action = @action
-    #puts "action:"
-    #p action
+
     while action.class <= MemberAccessStmt
-      #puts "- enter access loop"
       if !src_obj.respond_to?(:run)
         raise Error::UnsupportedOperation.new(
           "`#{src_obj.type}' does not support entering its scope.")
@@ -29,17 +21,9 @@ class MemberAccessStmt < BaseNode
 
       src_obj = src_obj.run(action.source, scope)
       action = action.action
-      #puts "src_obj:"
-      #p src_obj
-      #puts "action:"
-      #p action
     end
-    #puts "- arrived at final"
 
-    result = src_obj.run(action, scope)
-    #puts "result:"
-    #p result
-    return result
+    return src_obj.run(action, scope)
   end
 end
 
@@ -66,6 +50,7 @@ class MemberAssignStmt < BaseNode
       end
 
       src_obj = src_obj.run(action.source, scope)
+      src_obj = src_obj.unwrap_only_class(MetaNode)
       action = action.action
     end
 
@@ -74,7 +59,7 @@ class MemberAssignStmt < BaseNode
       # important, otherwise we end u#p with uneval'd assignments
       value    = @value.eval(scope)
       
-      src_obj.set(var_name, value, scope)
+      src_obj.run(AssignVariableStmt.new(var_name, value), scope)
     else
       raise Error::Magiika.new(
         "Action #{action.class} cannot be used for variable assignment.")

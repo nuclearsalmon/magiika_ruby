@@ -10,6 +10,10 @@ class EmptyNode < TypeNode
     return self.instance
   end
 
+  def get_default
+    return self.class.instance
+  end
+
   def eval(scope)
     return self
   end

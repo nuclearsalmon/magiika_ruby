@@ -1,72 +1,20 @@
 #!/usr/bin/env ruby
 
 
-class StaticNode < ContainerTypeNode
-  def eval(scope)
-    raise Error::Magiika.new(\
-      'StaticNodes are not meant to be evaluated, they are meant to be unwrapped.')
-  end
-
-  def unwrap
-    return @value
-  end
-
-  def self.type
-    return 'static'
-  end
-end
-
-
-class ConstNode < ContainerTypeNode
-  def eval(scope)
-    return @value.eval(scope)
-  end
-
-  def unwrap
-    return @value
-  end
-
-  def self.type
-    return 'const'
-  end
-
-  def eval(scope)
-    return unwrap().eval(scope)
-  end
-end
-
-
-class ConstStmt < ConstNode
-  def initialize(stmt)
-    if stmt.class <= DeclareVariableStmt
-      stmt.const = true  # set flag
-    else
-      raise Error::Magiika.new(\
-        'ConstNodes should only be initialized with a variable declaration statement.')
-    end
-    super(stmt)
-  end
-
-  def unwrap
-    return @value
-  end
-
-  def eval(scope)
-    return unwrap().eval(scope)
-  end
-end
-
-
 class ClassDefStmt < BaseNode
-  def initialize(name, stmts, parent_cls_name=nil)
-    @name, @stmts = name, stmts
-    @parent_cls_name = parent_cls_name
+  attr_reader :attribs
 
-    super()
+  def initialize(attribs, name, stmts, inherit_type)
+    @attribs, @name, @stmts, @inherit_type = attribs, name, stmts, inherit_type 
   end
 
   def eval(scope)
-    scope.add(@name, ClassNode.new(@name, @stmts, @parent_cls_name))
+    if @inherit_type != nil
+      inherit_type = @inherit_type.eval(scope)  # resolve
+    end
+    cls = ClassNode.new(@name, @stmts, inherit_type)
+    meta = MetaNode.new(@attribs, cls, cls)
+    scope.add(@name, meta)
   end
 end
 
@@ -76,11 +24,11 @@ class ConstructorDefStmt < FunctionDefStmt
     # inject return
     stmts = StmtsNode.new(
       stmts.unwrap.concat(
-        [ReturnStmtNode.new(RetrieveVariableStmt.new("self"))]
+        [ReturnStmtNode.new(RetrieveVariableStmt.new('self'))]
       )
     )
     
-    super("init", params, "self", stmts)
+    super([], 'init', params, [], RetrieveVariableStmt.new('self'), stmts)
   end
 end
 
@@ -93,7 +41,8 @@ class ClassInitStmt < BaseNode
   end
 
   def eval(scope)
-    cls = scope.get(@name)
+    meta = scope.get(@name)
+    cls = meta.unwrap()
     raise Error::UndefinedVariable(@name) if !(cls.class <= ClassNode)
     
     return ClassInstanceNode.new(cls, args, scope)

@@ -171,9 +171,3 @@ class NodeExtension
     raise Error::Magiika.new("`#{self}' does not extend support for `#{method_name}'.")
   end
 end
-
-
-class TypeNodeExtension < NodeExtension
-  include TypeEqualityOperators
-  include BooleanOperators
-end

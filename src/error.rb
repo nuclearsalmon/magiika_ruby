@@ -44,7 +44,7 @@ module Error
   
   class MismatchedType < Error::Magiika
     def initialize(value, type)
-      msg = "invalid type: `#{value}' is not a `#{type}'."
+      msg = "invalid type: \n`#{value.inspect}'\n... is not a ...\n`#{type.inspect}'."
       super(msg)
     end
   end
