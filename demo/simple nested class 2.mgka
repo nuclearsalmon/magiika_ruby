@@ -1,0 +1,17 @@
+#!./magiika.rb
+
+:User {
+  :Opt {
+    static: init(:a) {
+      $a
+    }
+  }
+
+  empty Opt: opt
+
+  static: init(:b) {
+    self.opt = Opt(b)
+  }
+}
+
+:user = User(2)

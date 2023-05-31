@@ -1,0 +1,15 @@
+#!./magiika.rb
+
+
+:printdup(flt: num) -> flt {
+  flt: dup = num * 2.0
+
+  $ "result: "
+  $ dup
+
+  return dup
+}
+
+flt: result = printdup(3.5)
+$ "returned: "
+$ result

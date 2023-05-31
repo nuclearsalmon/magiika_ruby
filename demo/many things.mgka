@@ -1,0 +1,36 @@
+#!./magiika.rb
+
+:i = 3
+while i > 0:
+  $ i--
+
+$ '---'
+
+while i < 10 {
+  $ i++
+  if i <= 1: i = i+2
+}
+
+fn: hello_world(:n=1) {
+  while n > 0 {
+    n--
+    $ 'Hello world!'
+  }
+}
+
+hello_world()
+hello_world(2)
+
+:Test {
+  empty str: msg
+
+  static: init() {
+    self.msg = 'Hello world!!!'
+  }
+
+  :hello_world() {
+    $ self.msg
+  }
+}
+
+Test().hello_world()

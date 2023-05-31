@@ -1,0 +1,24 @@
+#!./magiika.rb
+
+:A {
+  :B {
+    static int: e = 0;
+  }
+
+  static empty B: b
+  static int: e = 1
+
+  static :init() {
+    self.b = B()
+  }
+}
+$ "-----<1>"
+A()
+$ A.e
+$ A.b.e
+$ "-----<2>"
+A.e = 3
+A.b.e = 4
+$ "-----<3>"
+$ A.e
+$ A.b.e

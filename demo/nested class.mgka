@@ -1,0 +1,17 @@
+#!./magiika.rb
+
+:User {
+  :Opt {
+    :Access {}
+  }
+
+  empty Opt: opt
+  empty Opt.Access: acc
+
+  static: init() {
+    self.opt = Opt()
+    self.acc = Opt.Access()
+  }
+}
+
+:user = User()

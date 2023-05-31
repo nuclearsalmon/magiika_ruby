@@ -16,8 +16,5 @@
 # VSCode
 .vscode
 
-# custom file types
-*.mgka
-
 # ignore documentation for now
 /doc

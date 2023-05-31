@@ -1,0 +1,12 @@
+#!./magiika.rb
+
+cls: Noise {
+  static: makenoise() {
+    $ "baa"
+  }
+}
+
+cls: Sheep < Noise {}
+
+:s = Sheep()
+s.makenoise()

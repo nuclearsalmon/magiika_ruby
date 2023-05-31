@@ -1,0 +1,48 @@
+#!./magiika.rb
+
+:User {
+  :Opt {
+    int: type
+    int: level
+
+    static: init(int: type, int: level) {
+      self.type = type
+      self.level = level
+    }
+  }
+
+  empty str: name
+  empty Opt: opt
+
+  static: init(str: name, :type=0) {
+    self.name = name
+    self.opt = Opt(type, -1)
+  }
+
+  :type() -> str {
+    if opt.type == 0:
+      return "default"
+    elif opt.type == 1:
+      return "sysop"
+    else:
+      return "error"
+  }
+
+  :status() -> str {
+    if opt.level < 0:
+      return "inactive"
+    else:
+      return "active"
+  }
+
+  :level() -> int {
+    return opt.level
+  }
+}
+
+:user = User("CatX", 1)
+$ user.type()
+$ user.status()
+$ user.level()
+user.opt.level = 100
+$ user.status()

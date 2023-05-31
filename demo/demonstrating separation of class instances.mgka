@@ -1,0 +1,40 @@
+#!./magiika.rb
+
+
+cls: User {
+  static: type = "normal"
+  :name = "unknown"
+
+  static fn: init(:type="admin", :name="test") {
+    self.type = type
+    self.name = name
+  }
+  
+  fn: get_name() {
+    return self.name
+  }
+
+  static fn: get_type() {
+    return this.type
+  }
+}
+
+$ User.type
+:tmp_user = User()
+$ User.type
+
+:user = User(name="User_A")
+
+$ User.type
+User.type = "sysop"
+$ user.type
+
+$ user.get_name()
+$ user.name
+
+:user2 = User(name="User_B")
+$ user.name
+$ user2.name
+
+$ user.get_type()
+$ User.get_type()

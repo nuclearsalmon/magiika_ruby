@@ -1,0 +1,19 @@
+#!./magiika.rb
+
+:User {
+  str: name
+  int: type = 0
+
+  static: init(str: name, int: type) {
+    self.name = name
+    self.type = type
+  }
+
+  :get_type() -> int {
+    return self.type
+  }
+}
+
+:user = User("CatX", 3)
+$ user.name
+$ user.get_type()
