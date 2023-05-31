@@ -4,15 +4,16 @@
 class ClassDefStmt < BaseNode
   attr_reader :attribs
 
-  def initialize(attribs, name, stmts, inherit_type)
-    @attribs, @name, @stmts, @inherit_type = attribs, name, stmts, inherit_type 
+  def initialize(attribs, name, stmts, inherit_cls)
+    @attribs, @name, @stmts, @inherit_cls = attribs, name, stmts, inherit_cls
+    freeze
   end
 
   def eval(scope)
-    if @inherit_type != nil
-      inherit_type = @inherit_type.eval(scope)  # resolve
+    if @inherit_cls != nil
+      inherit_cls = @inherit_cls.eval(scope)  # resolve
     end
-    cls = ClassNode.new(@name, @stmts, inherit_type)
+    cls = ClassNode.new(@name, @stmts, inherit_cls)
     meta = MetaNode.new(@attribs, cls, cls)
     scope.add(@name, meta)
   end
@@ -32,8 +33,7 @@ end
 class ClassInitStmt < BaseNode
   def initialize(name, args)
     @name, @args = name, args
-
-    super()
+    freeze
   end
 
   def eval(scope)

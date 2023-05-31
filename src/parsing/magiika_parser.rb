@@ -18,7 +18,6 @@ require_relative '../lang/functions/function_def.rb'
 require_relative '../lang/functions/function_call.rb'
 require_relative '../lang/functions/function_inst.rb'
 require_relative '../lang/classes/class_def.rb'
-require_relative '../lang/classes/class_call.rb'
 require_relative '../lang/classes/class_base.rb'
 require_relative '../lang/classes/class_inst.rb'
 
@@ -48,14 +47,14 @@ class MagiikaParser
       # ✨ MATCHES
       # ------------------------------------------------------------------------
 
+      instance_eval &PROGRAM_PROC
       instance_eval &COMMONS_PROC
       instance_eval &TYPES_PROC
-      instance_eval &PROGRAM_PROC
-      instance_eval &OBJECTS_PROC
-      instance_eval &CLASSES_PROC
       instance_eval &FUNCTIONS_PROC
       instance_eval &CONDITIONS_PROC
       instance_eval &EXPRESSIONS_PROC
+      instance_eval &OBJECTS_PROC
+      instance_eval &CLASSES_PROC
     end
   end
 end

@@ -90,10 +90,12 @@ class ClassNode < TypeNode
   def run(stmt, scope)
     define(scope)
 
-    scopes = [
-      @inherit_cls.cls_scope,
-      @cls_scope
-    ]
+    scopes = []
+    inherited_scopes = get_inherited_scopes()
+    if inherited_scopes != nil
+      inherited_scopes.each {|scope| scopes << scope}
+    end
+    scopes << @cls_scope
 
     return scope.exec_scopes(scopes) {
       next stmt.eval(scope)
@@ -106,5 +108,19 @@ class ClassNode < TypeNode
 
   def type
     return @name
+  end
+
+  def get_inherited_scopes
+    return nil if @inherit_cls == nil
+    
+    scopes = []
+    cls = @inherit_cls
+    loop do
+      scopes << cls.cls_scope
+      cls = cls.inherit_cls
+      break if cls == nil
+    end
+    
+    return scopes
   end
 end

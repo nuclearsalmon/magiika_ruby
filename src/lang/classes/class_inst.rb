@@ -61,11 +61,13 @@ class ClassInstanceNode < TypeNode
   end
 
   def run(stmt, scope)
-    scopes = [
-      @cls.inherit_cls.cls_scope,
-      @cls.cls_scope,
-      @instance_scope
-    ]
+    scopes = []
+    inherited_scopes = @cls.get_inherited_scopes()
+    if inherited_scopes != nil
+      inherited_scopes.each {|scope| scopes << scope}
+    end
+    scopes << @cls.cls_scope
+    scopes << @instance_scope
 
     return scope.exec_scopes(scopes) {
       next stmt.eval(scope)

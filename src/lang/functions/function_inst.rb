@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-class FunctionInstance < TypeNode
+class FunctionNode < TypeNode
   attr_reader :params, :ret_attrs, :ret_type, :stmts
 
   def initialize(params, ret_attrs, ret_type, stmts)

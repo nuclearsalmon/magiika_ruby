@@ -24,9 +24,7 @@ CLASSES_PROC = Proc.new do
 
   rule :cls_stmts_block do
     match(:curbracket_block)            {[]}
-    match(:l_curbracket, :cls_stmts, :r_curbracket) {
-      |_,stmts,_| stmts  # TODO: wrap in tmp scope (?)
-    }
+    match(:l_curbracket, :cls_stmts, :r_curbracket) {|_,stmts,_| stmts}
   end
 
 
@@ -47,20 +45,15 @@ CLASSES_PROC = Proc.new do
   # ✨ Inheritance
   # --------------------------------------------------------
 
-  rule :cls_inherit do
+  rule :inherit do
     match('<', :type)                   {|_,type| type}
   end
-
-  rule :cls_extend do
-    match('<<', :type_list)             {|_,types| types}
-  end
-
 
   # ✨ Definition
   # --------------------------------------------------------
 
   rule :cls_def do
-    match(:cls_ident, :name, :cls_inherit, :cls_stmts_block) {
+    match(:cls_ident, :name, :inherit, :cls_stmts_block) {
       |attribs,name,cls_inh,stmts|
       ClassDefStmt.new(attribs, name, stmts, cls_inh)
     }
@@ -106,7 +99,7 @@ CLASSES_PROC = Proc.new do
       if !(attribs.include?(:abst))
         raise Error::UnsupportedOperation.new('Functions without {} must be marked as abstract.')
       end
-      
+
       FunctionDefStmt.new(attribs, name, params, [], nil, [])
     }
     match(:cls_fn_attribs, :fn_ident_type, :name,
@@ -184,7 +177,7 @@ CLASSES_PROC = Proc.new do
   end
 
   rule :cls_cls_def do
-    match(:cls_cls_ident, :name, :cls_inherit, :cls_stmts_block) {
+    match(:cls_cls_ident, :name, :inherit, :cls_stmts_block) {
       |attribs,name,cls_inh,stmts|
       ClassDefStmt.new(attribs, name, stmts, cls_inh)
     }

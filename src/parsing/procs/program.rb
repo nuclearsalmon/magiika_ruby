@@ -29,8 +29,8 @@ PROGRAM_PROC = Proc.new do
     match(:if_stmt)
     match(:while_stmt)
 
-    match(:cls_def)
     match(:fn_def)
+    match(:cls_def)
     
     match(:member_assign)
     
@@ -48,9 +48,16 @@ PROGRAM_PROC = Proc.new do
   
   rule :stmts_block do
     match(:curbracket_block)    {StmtsNode.new([])}
-    match(:l_curbracket, :stmts, :r_curbracket) {
-      |_,stmts,_| StmtsNode.new(stmts)
-    }
+    match(:l_curbracket, :stmts, :r_curbracket) {|_,stmts,_| StmtsNode.new(stmts)}
+  end
+
+  rule :nested_stmts do
+    match(:nested_stmt, :eol, :nested_stmts)  {|stmt,_,stmts| [stmt].concat(stmts)}
+    match(:eol, :nested_stmts)                {|_,stmts|      stmts}
+    match(:nested_stmt, :eol)                 {|stmt,_|       [stmt]}
+    match(:nested_stmt)                       {|stmt|         [stmt]}
+    match(:eol)                               {[]}
+    match('')                                 {[]}
   end
 
   rule :nested_stmt do

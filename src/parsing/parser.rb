@@ -169,11 +169,7 @@ class Parser
       p @max_pos
       p @tokens[@max_pos]
       line  = @tokens[0..@max_pos].count(:eol_tok) + 1
-      #col   = 0
-      #@tokens[0..@max_pos].reverse_each { |tok|
-      #  break if tok == :eol_tok
-      #  col = col + tok.to_s.length
-      #}
+      p result
       raise Error::Parse.new(
         "expected `#{@expected.join(', ')}', found `#{@tokens[@max_pos]}'.",
         line=line)#, col=col)

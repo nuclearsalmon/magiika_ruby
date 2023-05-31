@@ -21,9 +21,7 @@ FUNCTIONS_PROC = Proc.new do
 
   rule :fn_stmts_block do
     match(:curbracket_block)            {[]}
-    match(:l_curbracket, :fn_stmts, :r_curbracket) {
-      |_,stmts,_| stmts
-    }
+    match(:l_curbracket, :fn_stmts, :r_curbracket) {|_,stmts,_| stmts}
   end
 
 
@@ -94,11 +92,11 @@ FUNCTIONS_PROC = Proc.new do
   # --------------------------------------------------------
 
   rule :fn_def do
-    match(:fn_ident, :name, :params_block, :fn_stmts_block) {
+    match(:fn_ident_type, :name, :params_block, :fn_stmts_block) {
       |_,name,params,stmts|
       FunctionDefStmt.new([], name, params, [], nil, stmts)
     }
-    match(:fn_ident, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
+    match(:fn_ident_type, :name, :params_block, :fn_ret_ident, :fn_stmts_block) {
       |_,name,params,ret_ident,stmts|
       ret_attribs, ret_type = *ret_ident
       FunctionDefStmt.new([], name, params, ret_attribs, ret_type, stmts)

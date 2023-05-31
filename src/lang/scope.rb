@@ -14,6 +14,8 @@ class Scope
       'flt' => MetaNode.new([:const], nil, FltNode, true),
       'int' => MetaNode.new([:const], nil, IntNode, true),
       'str' => MetaNode.new([:const], nil, StrNode, true),
+      'fn' => MetaNode.new([:const], nil, FunctionNode, true),
+      'cls' => MetaNode.new([:const], nil, ClassNode, true),
     }]
   end
 
@@ -65,8 +67,12 @@ class Scope
 
       if (filter_scopes && scope[:@scope_type] != :global \
           && !INCL_SCOPE_FILTER.include?(scope[:@scope_type]))
-        nil # do nothing
-      elsif scope[name] != nil
+        # do nothing
+        i -= 1
+        next
+      end
+
+      if scope[name] != nil
         if value != nil    # assignment
           case mode
           when :default
@@ -173,7 +179,10 @@ class Scope
     begin
       @scopes << SEPARATOR_SCOPE_SLICE
 
-      scopes.each {|scope| @scopes << scope}
+      scopes.each {
+        |scope|
+        @scopes << scope
+      }
       result = block.call
     ensure
       scopes.each {@scopes.delete_at(-1)}

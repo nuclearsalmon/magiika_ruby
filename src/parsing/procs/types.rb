@@ -69,8 +69,8 @@ TYPES_PROC = Proc.new do
   end
   
   rule :type_ident do
-    match(:attributed_type, ':')  {|ident,_| ident}
     match(':')                    {[[], nil]}
+    match(:attributed_type, ':')  {|ident,_| ident}
   end
 
 

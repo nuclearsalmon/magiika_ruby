@@ -12,6 +12,10 @@ class BaseNode
     raise Error::NotImplemented.new
   end
 
+  def bool_eval?(scope)
+    return self.eval(scope).bool_eval?(scope)
+  end
+
   # optional method: `output'
   # evaluate str intended for output (not the same as to_s)
 end

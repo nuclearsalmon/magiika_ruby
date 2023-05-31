@@ -20,7 +20,7 @@ class FunctionCallStmt < BaseNode
         # reroute to constructor
         return ClassInstanceNode.new(section, @args, scope)
       else
-        raise Error::MismatchedType.new(section, [ClassNode, FunctionInstance])
+        raise Error::MismatchedType.new(section, [ClassNode, FunctionNode])
       end
     else
       fn_def_meta, fn_call_scope_slice = FunctionUtils.find_fn(@name, @args, scope)
