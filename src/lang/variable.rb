@@ -18,12 +18,10 @@ class DeclareVariableStmt < BaseNode
     # evaluate type
     type = @type
     attribs = @attribs
-    if type == nil
-      # inject magic attribute if missing
-      # FIXME: modifying instance variable
-      attribs << :magic if !attribs.include?(:magic)
-    else
-      type = @type.eval(scope)
+
+    type = @type.eval(scope) if type != nil
+    if [NilClass,EmptyNode].include?(type.class) && !(attribs.include?(:magic))
+      attribs << :magic 
     end
     
     # get default object
@@ -31,7 +29,7 @@ class DeclareVariableStmt < BaseNode
     if obj == nil
       if type == nil
         # no type specified, force magic
-        if !@attribs.include?(:empty)
+        if !attribs.include?(:empty)
           raise Error::Magiika.new(\
             "`#{@name}' is not allowed to be empty, yet is missing a value.")
         end
@@ -41,7 +39,7 @@ class DeclareVariableStmt < BaseNode
         if type.respond_to?(:get_default)
           obj = type.get_default()
         else
-          if !@attribs.include?(:empty)
+          if !attribs.include?(:empty)
             raise Error::Magiika.new("No default state exists for Type `#{type}'.")
           end
 
