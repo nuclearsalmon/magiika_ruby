@@ -102,8 +102,7 @@ CLASSES_PROC = Proc.new do
 
       FunctionDefStmt.new(attribs, name, params, [], nil, [])
     }
-    match(:cls_fn_attribs, :fn_ident_type, :name,
-        :params_block, :fn_ret_ident) {
+    match(:cls_fn_attribs, :fn_ident_type, :name, :params_block, :fn_ret_ident) {
       |attribs,_,name,params,ret_ident|
       if !(attribs.include?(:abst))
         raise Error::UnsupportedOperation.new('Functions without {} must be marked as abstract.')

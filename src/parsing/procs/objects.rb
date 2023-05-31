@@ -41,11 +41,6 @@ OBJECTS_PROC = Proc.new do
     }
   end
 
-  rule :extended_assign_var do
-    match(:assign_var)
-    match(:reassign_var)
-  end
-
   rule :retrieve_var do
     match(:eol)  {nil}  # this is a hack but it fixes :name matching :eol variants
     match(:name) {|name| RetrieveVariableStmt.new(name)}
