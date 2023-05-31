@@ -15,7 +15,7 @@ class MetaNode < TypeNode
     @type = type.class == EmptyNode ? nil : type
     @specification = specification
 
-    if !@specification && !attribs.include?(:magic) && [NilClass,EmptyNode].include?(@type.class)
+    if !@specification && !attribs.include?(:magic) && @type.class == EmptyNode
       raise Error::Magiika.new("Missing type yet not defined as magic.")
     end
     
@@ -32,15 +32,15 @@ class MetaNode < TypeNode
       when :magic
         nil  # do nothing
       when :empty
-        @empty = !@empty
+        @empty = true
       when :publ, :prot, :priv
         @accessor = attrib
       when :const
-        @const = !@const
+        @const = true
       when :stat
-        @static = !@static
+        @static = true
       when :abst
-        @abstract = !@abstract
+        @abstract = true
       else
         raise Error::Magiika.new("Unsupported attribute `#{attrib}'.")
       end

@@ -138,19 +138,21 @@ module FunctionUtils
   module_function :fill_params
 
   def find_fn(name, args, scope)
+    err = nil
     fn_section = scope.section_get(name)
     fn_section.each {
       |_,fn_def_meta|
 
       begin
-        fn_call_scope = fill_params(fn_def_meta.unwrap, args, scope)
+        fn_call_scope = fill_params(fn_def_meta.unwrap_only_class(MetaNode), args, scope)
         return [fn_def_meta, fn_call_scope]
       rescue Error::BadNrOfArgs, Error::BadArgName, \
-          Error::MismatchedType, Error::AlreadyDefined
-        nil
+          Error::MismatchedType, Error::AlreadyDefined => e
+        err = e
       end
     }
 
+    p err if err != nil
     sig = "#{name}(#{get_fn_key(types_from_args(args))})"
     raise Error::UndefinedVariable.new(sig)
   end
