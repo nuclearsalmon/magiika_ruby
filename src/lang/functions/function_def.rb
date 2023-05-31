@@ -20,9 +20,6 @@ class FunctionDefStmt < BaseNode
     if @attribs.include?(:abst) && @stmts.length != 0
       raise Error::Magiika.new('Abstract functions cannot contain statements.')
     end
-
-    # Validate return attributes
-    MetaNode.new(@ret_attribs, nil, nil, true)
     
     # Evaluate return type
     ret_type = @ret_type
@@ -30,6 +27,9 @@ class FunctionDefStmt < BaseNode
       ret_type = @ret_type.eval(scope)
       TypeSafety.verify_is_a_type(ret_type)
     end
+
+    # Validate return attributes
+    MetaNode.new(@ret_attribs, nil, ret_type, true)
 
     params = @params.clone
     params.each {

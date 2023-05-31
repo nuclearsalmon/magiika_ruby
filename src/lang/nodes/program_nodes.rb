@@ -14,17 +14,16 @@ class StmtsNode < BaseNode
   end
 
   def eval(scope)
-    result = nil
+    result = EmptyNode.get_default
+    @stmts.delete(nil)
+
     @stmts.each {
       |stmt|
-      next if stmt == nil || stmt == :eol
+      next if stmt == nil
       
-      tmp_result = stmt.eval(scope)
+      result = stmt.eval(scope)
       
-      if stmt.class <= ReturnStmtNode || @stmts.length == 1
-        result = tmp_result == nil ? EmptyNode.get_default : tmp_result
-        break
-      end
+      break if stmt.class <= ReturnStmtNode
     }
     return result
   end

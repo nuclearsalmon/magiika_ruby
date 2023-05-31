@@ -2,12 +2,11 @@
 
 class MetaNode < TypeNode
   attr_reader :node, :type
-  attr_reader :accessor, :magic, :empty, :static, :abstract, :const
+  attr_reader :accessor, :empty, :static, :abstract, :const
   attr_reader :specification
 
   def initialize(attribs, node=nil, type=nil, specification=false)
     @accessor = :publ
-    @magic = type == nil || type.class == EmptyNode
     @empty = type.class == EmptyNode
     @const = false
     @static = false
@@ -15,6 +14,10 @@ class MetaNode < TypeNode
     @node = nil  # will set using `set_node(node)' later
     @type = type.class == EmptyNode ? nil : type
     @specification = specification
+
+    if !@specification && !attribs.include?(:magic) && [NilClass,EmptyNode].include?(@type.class)
+      raise Error::Magiika.new("Missing type yet not defined as magic.")
+    end
     
     attrib_dupl_check = []
     attribs.each {
@@ -27,7 +30,7 @@ class MetaNode < TypeNode
 
       case attrib
       when :magic
-        @magic = @type == nil ? true : !@magic
+        nil  # do nothing
       when :empty
         @empty = !@empty
       when :publ, :prot, :priv
@@ -59,20 +62,24 @@ class MetaNode < TypeNode
     end
 
     if node == nil
-      raise Error::Magiika.new('Nil node values are forbidden.')
+      raise Error::Magiika.new('Nil node values are forbidden.') if !@specification
     elsif !(node.class <= TypeNode)
       raise Error::Magiika.new("Node is not a TypeNode: #{node}.")
     elsif node.class <= EmptyNode
-      if !@empty && !@magic
+      if !@empty && !self.magic?
         raise Error::Magiika.new('Attempted to set to nil when not empty.')
       end
     else
-      if !@magic && !TypeSafety.obj_is_type?(node, @type, true)
+      if !self.magic? && !TypeSafety.obj_is_type?(node, @type, true)
         raise Error::MismatchedType.new(node, @type)
       end
     end
     
     @node = node
+  end
+
+  def magic?
+    return @type == nil
   end
 
   def public?
@@ -102,5 +109,12 @@ class MetaNode < TypeNode
 
   def self.type
     return 'meta'
+  end
+
+  def output(scope)
+    return "#{@node.respond_to?(:output) ? @node.output(scope) : @node}\n" \
+      + "#{@specification ? 'metaspec' : 'meta'}: " \
+      + "<#{@accessor}#{' empty' if @empty} #{@type == nil ? 'magic' : @type}" \
+      + "#{' const' if @const}#{' static' if @static}#{' abstract' if @abstract}>" \
   end
 end

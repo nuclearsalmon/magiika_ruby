@@ -64,34 +64,6 @@ end
 
 
 module TypeSafety
-  # ⭐ PRIVATE
-  # ---------------------------------------------------------------------------
-  private
-
-  DEFAULT_BUILT_IN_TYPES = {
-    'empty' => EmptyNode,
-    'bool'  => BoolNode, 
-    'int'   => IntNode, 
-    'flt'   => FltNode,
-    'str'   => StrNode,
-  }.freeze
-
-  EXTENDED_BUILT_IN_TYPES = {
-    'class' => nil,
-    'cls' => nil,
-    'fn' => nil,
-    'func' => nil,
-    'this' => nil,
-    'self' => nil,
-  }.freeze
-
-
-  # ⭐ PUBLIC
-  # ---------------------------------------------------------------------------
-  public
-
-  # NEWGEN ------------------------------------------------- 
-
   def verify_is_a_type(obj)
     # Verify that it inherits from TypeNode
     if !obj.is_a?(TypeNode)
@@ -117,7 +89,7 @@ module TypeSafety
     if obj.is_a?(MetaNode)
       if type_obj.is_a?(MetaNode)
         return false if obj.const != type_obj.const
-        return false if !type_obj.magic && obj.magic
+        return false if !type_obj.magic? && obj.magic?
         
         type_obj = type_obj.unwrap
       end
@@ -127,7 +99,7 @@ module TypeSafety
         type_obj = type_obj.unwrap
       else
         return false if type_obj.const
-        return true if type_obj.magic
+        return true if type_obj.magic?
       end
     end
     
@@ -147,5 +119,4 @@ module TypeSafety
     return false
   end
   module_function :obj_is_type?
-
 end

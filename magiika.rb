@@ -45,7 +45,6 @@ class Magiika
     @pretty_error = true
     @error_rescueing = true
     @raw_print = false
-    @show_empty = false
     @scope = Scope.new()
   end
 
@@ -76,9 +75,6 @@ class Magiika
     when "r"
       @raw_print = !@raw_print
       _notify("raw object printing " + _cond_to_tg(@raw_print) + "\n")
-    when "s"
-      @show_empty = !@show_empty
-      _notify("show empty " + _cond_to_tg(@show_empty) + "\n")
     when "\n"
       _warn("unspecified command. try `##h'.\n")
     when "h"
@@ -88,7 +84,6 @@ class Magiika
         "   `e' : toggle pretty errors\n" +
         "   `a' : toggle error rescuing\n" +
         "   `r' : toggle raw object printing\n" +
-        "   `s' : toggle show empty\n" +
         "   `h' : this help menu\n")
     else
       _warn("unknown command. try `##h'.\n")
@@ -125,9 +120,7 @@ class Magiika
         else
           if result == nil
             print "\n"
-          elsif result.class.method_defined?(:output) &&
-            (result.class != EmptyNode || 
-              (result.class == EmptyNode && @show_empty))
+          elsif result.class.method_defined?(:output)
             result = result.output(@scope)
             print "⭐ #{result}\n\n"
           else

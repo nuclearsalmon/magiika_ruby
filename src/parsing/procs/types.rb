@@ -88,7 +88,7 @@ TYPES_PROC = Proc.new do
   end
   
   rule :literal do
-    match('empty')              {EmptyNode.new}
+    match('empty')              {EmptyNode.get_default}
     match(:flt)
     match(:int)
     match(:bool)
